@@ -13,9 +13,7 @@ type PM5Device struct {
 func NewPM5Device() *PM5Device {
 	return &PM5Device{
 		DeviceAddress: "EF:17:C9:1A:D8:18",
-		// CE060000-43E5-11E4-916C-0800200C9A66
-		ServiceUUID: bluetooth.NewUUID([16]byte{0xCE, 0x06, 0x00, 0x00, 0x43, 0xE5, 0x11, 0xE4, 0x91, 0x6C, 0x08, 0x00, 0x20, 0x0C, 0x9A, 0x66}),
-		// CE060039-43E5-11E4-916C-0800200C9A66
-		WorkoutUUID: bluetooth.NewUUID([16]byte{0xCE, 0x06, 0x00, 0x39, 0x43, 0xE5, 0x11, 0xE4, 0x91, 0x6C, 0x08, 0x00, 0x20, 0x0C, 0x9A, 0x66}),
+		ServiceUUID:   mustParseUUID("CE060000-43E5-11E4-916C-0800200C9A66"),
+		WorkoutUUID:   mustParseUUID("CE060039-43E5-11E4-916C-0800200C9A66"),
 	}
 }

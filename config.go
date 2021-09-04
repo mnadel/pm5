@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -10,9 +11,10 @@ import (
 type Configuration struct {
 	AdminConsolePort  string
 	ConfigFile        string
-	BleScanFreq       time.Duration
 	LogLevel          log.Level
+	BleScanFreq       time.Duration
 	BleReceiveTimeout time.Duration
+	BleScanTimeout    time.Duration
 }
 
 func NewConfiguration() *Configuration {
@@ -36,9 +38,26 @@ func NewConfiguration() *Configuration {
 		}).WithError(err).Fatal("cannot parse log level")
 	}
 
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		FullTimestamp:    true,
+		ForceQuote:       true,
+		DisableTimestamp: !isTTY(),
+	})
+
+	if Config.LogLevel == log.DebugLevel {
+		log.SetReportCaller(true)
+	}
+
+	log.SetOutput(os.Stdout)
+	log.SetLevel(logLevel)
+
+	log.WithField("config", *Config).Info("loaded configuration")
+
 	return &Configuration{
 		AdminConsolePort:  viper.GetString("admin_console_port"),
 		BleScanFreq:       viper.GetDuration("ble_scan_freq"),
+		BleScanTimeout:    viper.GetDuration("ble_scan_timeout"),
 		BleReceiveTimeout: viper.GetDuration("ble_recv_timeout"),
 		ConfigFile:        viper.ConfigFileUsed(),
 		LogLevel:          logLevel,

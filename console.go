@@ -41,7 +41,7 @@ func StartAdminConsole() {
 
 			vars := mux.Vars(r)
 			key := vars["rate"]
-			rate := ShouldParseAtoi(key)
+			rate := shouldParseAtoi(key)
 
 			runtime.SetBlockProfileRate(rate)
 
@@ -53,7 +53,7 @@ func StartAdminConsole() {
 
 			vars := mux.Vars(r)
 			key := vars["rate"]
-			rate := ShouldParseAtoi(key)
+			rate := shouldParseAtoi(key)
 
 			runtime.SetMutexProfileFraction(rate)
 
