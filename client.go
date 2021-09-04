@@ -23,7 +23,7 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) Scan(timeout time.Duration) {
+func (c *Client) Scan(timeout time.Duration, exitCh chan struct{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -73,7 +73,7 @@ func (c *Client) Scan(timeout time.Duration) {
 	case <-doneChan:
 		c.adapter.StopScan()
 		cancel()
-		return
+		exitCh <- struct{}{}
 	case result = <-scanResultCh:
 		break
 	}
@@ -82,7 +82,7 @@ func (c *Client) Scan(timeout time.Duration) {
 	device, err = c.adapter.Connect(result.Address, bluetooth.ConnectionParams{})
 	if err != nil {
 		log.WithError(err).Error("cannot connect")
-		return
+		exitCh <- struct{}{}
 	}
 
 	MetricBLEConnects.Add(1)
@@ -132,4 +132,6 @@ func (c *Client) Scan(timeout time.Duration) {
 
 	c.adapter.StopScan()
 	cancel()
+
+	exitCh <- struct{}{}
 }

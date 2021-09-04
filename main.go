@@ -14,16 +14,20 @@ func init() {
 }
 
 func main() {
-	log.Debug("creating client")
 	client := NewClient()
+	exitCh := make(chan struct{}, 1)
 
-	log.Debug("looping...")
+	go func() {
+		log.Info("spawning scanner")
 
-	for {
-		log.Debug("scanning...")
-		client.Scan(Config.BleScanTimeout)
+		for {
+			client.Scan(Config.BleScanTimeout, exitCh)
+			time.Sleep(Config.BleScanFreq)
+		}
+	}()
 
-		log.Debug("sleeping before next scan")
-		time.Sleep(Config.BleScanFreq)
-	}
+	log.Info("awaiting scanning termination")
+	<-exitCh
+
+	log.Info("scan terminated")
 }
