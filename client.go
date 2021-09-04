@@ -33,11 +33,15 @@ func (c *Client) Scan(timeout time.Duration) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	doneChan := make(chan struct{}, 1)
+	sigRecevicedCh := make(chan struct{}, 1)
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
 
 	if c.adapter == nil {
-		log.Fatal("adapter is nil!")
+		log.Panic("adapter is nil")
+	}
+
+	if err := c.adapter.Enable(); err != nil {
+		log.WithError(err).Fatal("cannot enable ble")
 	}
 
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {
@@ -72,7 +76,7 @@ func (c *Client) Scan(timeout time.Duration) {
 	go func() {
 		sig := <-sigs
 		log.WithField("signal", sig).Debug("signal received from os")
-		doneChan <- struct{}{}
+		sigRecevicedCh <- struct{}{}
 	}()
 
 	var result bluetooth.ScanResult
@@ -80,12 +84,11 @@ func (c *Client) Scan(timeout time.Duration) {
 	log.Debug("awaiting discovery")
 
 	select {
-	case <-doneChan:
+	case <-sigRecevicedCh:
 		c.adapter.StopScan()
 		cancel()
 		c.Exit() <- struct{}{}
 	case result = <-scanResultCh:
-		break
 	}
 
 	var device *bluetooth.Device
@@ -134,8 +137,7 @@ func (c *Client) Scan(timeout time.Duration) {
 
 	// wait for timer or signal
 	select {
-	case <-doneChan:
-		break
+	case <-sigRecevicedCh:
 	case <-timer.C:
 		log.Debug("recv timeout expired")
 	}
