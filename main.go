@@ -14,9 +14,13 @@ func init() {
 }
 
 func main() {
+	log.Debug("creating client")
 	client := NewClient()
 
+	log.Debug("looping...")
+
 	for {
+		log.Debug("scanning...")
 		client.Scan(Config.BleScanTimeout)
 
 		log.Debug("sleeping before next scan")
