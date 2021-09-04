@@ -1,0 +1,12 @@
+[Unit]
+Description=PM5 Service
+Conflicts=bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=/home/pi/go/bin/pm5
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
