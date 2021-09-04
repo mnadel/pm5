@@ -52,9 +52,7 @@ func NewConfiguration() *Configuration {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(logLevel)
 
-	log.WithField("config", *Config).Info("loaded configuration")
-
-	return &Configuration{
+	config := &Configuration{
 		AdminConsolePort:  viper.GetString("admin_console_port"),
 		BleScanFreq:       viper.GetDuration("ble_scan_freq"),
 		BleScanTimeout:    viper.GetDuration("ble_scan_timeout"),
@@ -62,4 +60,8 @@ func NewConfiguration() *Configuration {
 		ConfigFile:        viper.ConfigFileUsed(),
 		LogLevel:          logLevel,
 	}
+
+	log.WithField("config", *config).Info("loaded configuration")
+
+	return config
 }
