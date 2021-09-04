@@ -54,8 +54,6 @@ func NewConfiguration() *Configuration {
 
 	config := &Configuration{
 		AdminConsolePort:  viper.GetString("admin_console_port"),
-		BleScanFreq:       viper.GetDuration("ble_scan_freq"),
-		BleScanTimeout:    viper.GetDuration("ble_scan_timeout"),
 		BleReceiveTimeout: viper.GetDuration("ble_recv_timeout"),
 		ConfigFile:        viper.ConfigFileUsed(),
 		LogLevel:          logLevel,

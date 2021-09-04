@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -18,11 +16,7 @@ func main() {
 
 	go func() {
 		log.Info("spawning scanner")
-
-		for {
-			client.Scan(Config.BleScanTimeout)
-			time.Sleep(Config.BleScanFreq)
-		}
+		client.Scan()
 	}()
 
 	log.Info("awaiting scanning termination")

@@ -1,9 +1,6 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -28,8 +25,7 @@ func (c *Client) Exit() chan struct{} {
 	return c.exitCh
 }
 
-func (c *Client) Scan(timeout time.Duration) {
-	sigRecevicedCh := make(chan struct{}, 1)
+func (c *Client) Scan() {
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
 
 	if c.adapter == nil {
@@ -60,25 +56,8 @@ func (c *Client) Scan(timeout time.Duration) {
 		log.WithError(err).Fatal("error scanning")
 	}
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigs
-		log.WithField("signal", sig).Debug("signal received from os")
-		sigRecevicedCh <- struct{}{}
-	}()
-
-	var result bluetooth.ScanResult
-
-	log.Debug("awaiting discovery")
-
-	select {
-	case <-sigRecevicedCh:
-		c.adapter.StopScan()
-		c.Exit() <- struct{}{}
-	case result = <-scanResultCh:
-	}
+	log.Info("starting discovery")
+	result := <-scanResultCh
 
 	var device *bluetooth.Device
 	device, err = c.adapter.Connect(result.Address, bluetooth.ConnectionParams{})
@@ -118,19 +97,11 @@ func (c *Client) Scan(timeout time.Duration) {
 
 	char0039.EnableNotifications(func(buf []byte) {
 		Metric0039Messages.Add(1)
-		log.WithField("buf", buf).Info("received data")
+		log.Infof("received data: %x", buf)
 	})
 
 	timer := time.NewTimer(Config.BleReceiveTimeout)
 	<-timer.C
 
-	// wait for timer or signal
-	select {
-	case <-sigRecevicedCh:
-	case <-timer.C:
-		log.Debug("recv timeout expired")
-	}
-
-	c.adapter.StopScan()
 	c.Exit() <- struct{}{}
 }

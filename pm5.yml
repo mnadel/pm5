@@ -1,5 +1,3 @@
 admin_console_port: ":2112"
 log_level: info
-ble_scan_freq: 5s
-ble_scan_timeout: 30s
-ble_recv_timeout: 15m
+ble_recv_timeout: 20m
