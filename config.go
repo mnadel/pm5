@@ -45,7 +45,7 @@ func NewConfiguration() *Configuration {
 		DisableTimestamp: !isTTY(),
 	})
 
-	if Config.LogLevel == log.DebugLevel {
+	if logLevel == log.DebugLevel {
 		log.SetReportCaller(true)
 	}
 
