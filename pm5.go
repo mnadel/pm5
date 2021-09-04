@@ -13,7 +13,7 @@ type PM5Device struct {
 func NewPM5Device() *PM5Device {
 	return &PM5Device{
 		DeviceAddress: "EF:17:C9:1A:D8:18",
-		ServiceUUID:   mustParseUUID("CE060000-43E5-11E4-916C-0800200C9A66"),
-		WorkoutUUID:   mustParseUUID("CE060039-43E5-11E4-916C-0800200C9A66"),
+		ServiceUUID:   mustParseUUID("ce060000-43e5-11e4-916c-0800200c9a66"),
+		WorkoutUUID:   mustParseUUID("ce060039-43e5-11e4-916c-0800200c9a66"),
 	}
 }
