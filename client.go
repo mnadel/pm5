@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,9 +29,6 @@ func (c *Client) Exit() chan struct{} {
 }
 
 func (c *Client) Scan(timeout time.Duration) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
 	sigRecevicedCh := make(chan struct{}, 1)
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
 
@@ -45,12 +41,6 @@ func (c *Client) Scan(timeout time.Duration) {
 	}
 
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {
-		if t, _ := ctx.Deadline(); time.Now().After(t) {
-			log.Debug("surpassed timeout")
-			cancel()
-			return
-		}
-
 		MetricBLEScans.Add(1)
 		MetricLastScan.SetToCurrentTime()
 
@@ -86,7 +76,6 @@ func (c *Client) Scan(timeout time.Duration) {
 	select {
 	case <-sigRecevicedCh:
 		c.adapter.StopScan()
-		cancel()
 		c.Exit() <- struct{}{}
 	case result = <-scanResultCh:
 	}
@@ -143,7 +132,5 @@ func (c *Client) Scan(timeout time.Duration) {
 	}
 
 	c.adapter.StopScan()
-	cancel()
-
 	c.Exit() <- struct{}{}
 }
