@@ -14,21 +14,31 @@ import (
 type Client struct {
 	device  *PM5Device
 	adapter *bluetooth.Adapter
+	exitCh  chan struct{}
 }
 
 func NewClient() *Client {
 	return &Client{
 		device:  NewPM5Device(),
 		adapter: bluetooth.DefaultAdapter,
+		exitCh:  make(chan struct{}, 1),
 	}
 }
 
-func (c *Client) Scan(timeout time.Duration, exitCh chan struct{}) {
+func (c *Client) Exit() chan struct{} {
+	return c.exitCh
+}
+
+func (c *Client) Scan(timeout time.Duration) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	doneChan := make(chan struct{}, 1)
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
+
+	if c.adapter == nil {
+		log.Fatal("adapter is nil!")
+	}
 
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {
 		if t, _ := ctx.Deadline(); time.Now().After(t) {
@@ -73,7 +83,7 @@ func (c *Client) Scan(timeout time.Duration, exitCh chan struct{}) {
 	case <-doneChan:
 		c.adapter.StopScan()
 		cancel()
-		exitCh <- struct{}{}
+		c.Exit() <- struct{}{}
 	case result = <-scanResultCh:
 		break
 	}
@@ -82,7 +92,7 @@ func (c *Client) Scan(timeout time.Duration, exitCh chan struct{}) {
 	device, err = c.adapter.Connect(result.Address, bluetooth.ConnectionParams{})
 	if err != nil {
 		log.WithError(err).Error("cannot connect")
-		exitCh <- struct{}{}
+		c.Exit() <- struct{}{}
 	}
 
 	MetricBLEConnects.Add(1)
@@ -133,5 +143,5 @@ func (c *Client) Scan(timeout time.Duration, exitCh chan struct{}) {
 	c.adapter.StopScan()
 	cancel()
 
-	exitCh <- struct{}{}
+	c.Exit() <- struct{}{}
 }
