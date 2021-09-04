@@ -26,9 +26,3 @@ func ShouldParseAtoi(str string) int {
 func isTTY() bool {
 	return terminal.IsTerminal(int(os.Stdin.Fd()))
 }
-
-func must(action string, err error) {
-	if err != nil {
-		log.WithError(err).Fatal(action)
-	}
-}

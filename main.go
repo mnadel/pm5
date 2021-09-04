@@ -39,7 +39,10 @@ func main() {
 	adapter := bluetooth.DefaultAdapter
 	nullScan := &bluetooth.ScanResult{}
 
-	must("enable BLE stack", adapter.Enable())
+	log.Info("enabling ble stack")
+	if err := adapter.Enable(); err != nil {
+		log.WithError(err).Fatal("cannot enable ble")
+	}
 
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
 
@@ -97,10 +100,12 @@ func main() {
 
 	log.Info("discovering services")
 	srvcs, err := device.DiscoverServices([]bluetooth.UUID{pm5device.ServiceUUID})
-	must("discover services", err)
+	if err != nil {
+		log.WithError(err).Fatal("cannot discover services")
+	}
 
 	if len(srvcs) == 0 {
-		log.Fatal("could not find service")
+		log.Fatal("could not find PM5 service")
 	}
 
 	srvc := srvcs[0]
