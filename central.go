@@ -13,14 +13,27 @@ type Central struct {
 	exitCh      chan struct{}
 }
 
-func NewCentral(config *Configuration, device *PM5Device) *Central {
-	return &Central{
+func NewCentral(config *Configuration) *Central {
+	device := NewPM5Device(config)
+
+	central := &Central{
 		config:      config,
 		device:      device,
 		adapter:     bluetooth.DefaultAdapter,
 		subscribers: make(map[byte][]Subscriber),
 		exitCh:      make(chan struct{}, 1),
 	}
+
+	for _, characteristic := range device.Characteristics {
+		log.WithFields(log.Fields{
+			"service_name": characteristic.Name,
+			"msg":          characteristic.MessageName(),
+		}).Info("registering")
+
+		central.Register(characteristic)
+	}
+
+	return central
 }
 
 func (c *Central) Register(char *Characterisic) {
