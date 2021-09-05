@@ -5,7 +5,7 @@ import (
 	"tinygo.org/x/bluetooth"
 )
 
-type Client struct {
+type Central struct {
 	config      *Configuration
 	device      *PM5Device
 	adapter     *bluetooth.Adapter
@@ -13,8 +13,8 @@ type Client struct {
 	exitCh      chan struct{}
 }
 
-func NewClient(config *Configuration, device *PM5Device) *Client {
-	return &Client{
+func NewCentral(config *Configuration, device *PM5Device) *Central {
+	return &Central{
 		config:      config,
 		device:      device,
 		adapter:     bluetooth.DefaultAdapter,
@@ -23,7 +23,7 @@ func NewClient(config *Configuration, device *PM5Device) *Client {
 	}
 }
 
-func (c *Client) Register(char *Characterisic) {
+func (c *Central) Register(char *Characterisic) {
 	if val, ok := c.subscribers[char.Message]; ok {
 		c.subscribers[char.Message] = append(val, char.Subscriber)
 	} else {
@@ -32,7 +32,7 @@ func (c *Client) Register(char *Characterisic) {
 	}
 }
 
-func (c *Client) Listen() {
+func (c *Central) Listen() {
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
 
 	if c.adapter == nil {

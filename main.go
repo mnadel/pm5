@@ -9,7 +9,7 @@ func main() {
 	startAdminConsole(config)
 
 	device := NewPM5Device(config)
-	client := NewClient(config, device)
+	central := NewCentral(config, device)
 
 	for _, characteristic := range device.Characteristics {
 		log.WithFields(log.Fields{
@@ -17,12 +17,12 @@ func main() {
 			"msg":          characteristic.MessageName(),
 		}).Info("registering")
 
-		client.Register(characteristic)
+		central.Register(characteristic)
 	}
 
 	log.Info("starting central")
 
-	client.Listen()
+	central.Listen()
 
 	log.Info("central terminated")
 }
