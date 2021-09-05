@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+
+	log "github.com/sirupsen/logrus"
 	"tinygo.org/x/bluetooth"
 )
 
@@ -32,6 +35,10 @@ func NewPM5Device(config *Configuration) *PM5Device {
 	}
 }
 
+func (c *Characterisic) MessageName() string {
+	return fmt.Sprintf("%x", c.Message)
+}
+
 func (d *PM5Device) CharacteristicUUIDs() []bluetooth.UUID {
 	arr := make([]bluetooth.UUID, len(d.Characteristics))
 	for i, c := range d.Characteristics {
@@ -48,4 +55,23 @@ func (d *PM5Device) FindCharacteristic(uuid bluetooth.UUID) *Characterisic {
 	}
 
 	return nil
+}
+
+func (d *PM5Device) Register(c bluetooth.DeviceCharacteristic) {
+	char := d.FindCharacteristic(c.UUID())
+	if char == nil {
+		log.WithField("uuid", c.UUID()).Error("error looking up characteristic")
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"uuid":    c.UUID().String(),
+		"service": char.Name,
+		"msg":     char.MessageName(),
+	}).Info("subscribing to char's messages")
+
+	c.EnableNotifications(func(buf []byte) {
+		MetricMessages.WithLabelValues(char.MessageName()).Add(1)
+		char.Subscriber.Notify(buf)
+	})
 }

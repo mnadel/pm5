@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -81,9 +80,8 @@ func (c *Client) Scan() {
 	}
 
 	MetricBLEConnects.Add(1)
-	log.WithField("address", result.Address.String()).Debug("connected")
+	log.WithField("address", result.Address.String()).Info("connected")
 
-	log.Debug("discovering services")
 	srvcs, err := device.DiscoverServices([]bluetooth.UUID{c.device.ServiceUUID})
 	if err != nil {
 		log.WithError(err).Fatal("cannot discover services")
@@ -110,23 +108,8 @@ func (c *Client) Scan() {
 	}
 
 	for _, discovered := range discoveredCharacteristics {
-		pm5Characteristic := c.device.FindCharacteristic(discovered.UUID())
-		if pm5Characteristic == nil {
-			log.WithField("uuid", discovered.UUID()).Error("error looking up characteristic")
-		} else {
-			message := fmt.Sprintf("%x", pm5Characteristic.Message)
-
-			log.WithFields(log.Fields{
-				"uuid":    discovered.UUID().String(),
-				"service": pm5Characteristic.Name,
-				"msg":     message,
-			}).Info("subscribing")
-
-			discovered.EnableNotifications(func(buf []byte) {
-				MetricMessages.WithLabelValues(message).Add(1)
-				pm5Characteristic.Subscriber.Notify(buf)
-			})
-		}
+		log.WithField("char", discovered.UUID().String())
+		c.device.Register(discovered)
 	}
 
 	timer := time.NewTimer(c.config.BleReceiveTimeout)
