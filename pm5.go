@@ -25,7 +25,7 @@ type PM5Device struct {
 func NewPM5Device(config *Configuration) *PM5Device {
 	return &PM5Device{
 		DeviceAddress: config.PM5DeviceAddress,
-		ServiceUUID:   mustParseUUID("ce060000-43e5-11e4-916c-0800200c9a66"),
+		ServiceUUID:   mustParseUUID("ce060030-43e5-11e4-916c-0800200c9a66"),
 		Characteristics: []*Characterisic{
 			{
 				Name:       "workout",
