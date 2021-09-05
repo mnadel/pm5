@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -8,18 +9,29 @@ import (
 )
 
 type Client struct {
-	config  *Configuration
-	device  *PM5Device
-	adapter *bluetooth.Adapter
-	exitCh  chan struct{}
+	config      *Configuration
+	device      *PM5Device
+	adapter     *bluetooth.Adapter
+	subscribers map[byte][]Subscriber
+	exitCh      chan struct{}
 }
 
 func NewClient(config *Configuration, device *PM5Device) *Client {
 	return &Client{
-		config:  config,
-		device:  device,
-		adapter: bluetooth.DefaultAdapter,
-		exitCh:  make(chan struct{}, 1),
+		config:      config,
+		device:      device,
+		adapter:     bluetooth.DefaultAdapter,
+		subscribers: make(map[byte][]Subscriber),
+		exitCh:      make(chan struct{}, 1),
+	}
+}
+
+func (c *Client) Register(char *Characterisic) {
+	if val, ok := c.subscribers[char.Message]; ok {
+		c.subscribers[char.Message] = append(val, char.Subscriber)
+	} else {
+		c.subscribers[char.Message] = make([]Subscriber, 1)
+		c.subscribers[char.Message][0] = char.Subscriber
 	}
 }
 
@@ -81,26 +93,41 @@ func (c *Client) Scan() {
 		log.Fatal("could not find PM5 service")
 	}
 
-	srvc := srvcs[0]
+	characteristicUUIDs := c.device.CharacteristicUUIDs()
 
-	log.WithField("service", srvc.UUID().String()).Debug("found service")
+	log.WithFields(log.Fields{
+		"service": srvcs[0].UUID().String(),
+		"chars":   characteristicUUIDs,
+	}).Info("found service, looking for chars")
 
-	chars, err := srvc.DiscoverCharacteristics([]bluetooth.UUID{c.device.WorkoutUUID})
+	discoveredCharacteristics, err := srvcs[0].DiscoverCharacteristics(characteristicUUIDs)
 	if err != nil {
 		log.WithError(err).Fatal("cannot discover characteristics")
 	}
 
-	if len(chars) != 1 {
-		log.Fatal("cannot find workout characteristic")
+	if len(discoveredCharacteristics) != len(characteristicUUIDs) {
+		log.WithField("discovered", discoveredCharacteristics).Error("cannot find every characteristic")
 	}
 
-	char0039 := chars[0]
-	log.WithField("uuid", char0039.UUID().String()).Debug("subscribing")
+	for _, discovered := range discoveredCharacteristics {
+		pm5Characteristic := c.device.FindCharacteristic(discovered.UUID())
+		if pm5Characteristic == nil {
+			log.WithField("uuid", discovered.UUID()).Error("error looking up characteristic")
+		} else {
+			message := fmt.Sprintf("%x", pm5Characteristic.Message)
 
-	char0039.EnableNotifications(func(buf []byte) {
-		Metric0039Messages.Add(1)
-		log.Infof("received data: %x", buf)
-	})
+			log.WithFields(log.Fields{
+				"uuid":    discovered.UUID().String(),
+				"service": pm5Characteristic.Name,
+				"msg":     message,
+			}).Info("subscribing")
+
+			discovered.EnableNotifications(func(buf []byte) {
+				MetricMessages.WithLabelValues(message).Add(1)
+				pm5Characteristic.Subscriber.Notify(buf)
+			})
+		}
+	}
 
 	timer := time.NewTimer(c.config.BleReceiveTimeout)
 	<-timer.C

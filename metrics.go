@@ -21,8 +21,8 @@ var (
 		Help: "The number of times we've connected to a BLE device",
 	})
 
-	Metric0039Messages = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "pm5_message_0039_total",
-		Help: "The number of times we've received a 0x0039 message",
-	})
+	MetricMessages = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "pm5_message_total",
+		Help: "The number of times we've received a message",
+	}, []string{"msg"})
 )
