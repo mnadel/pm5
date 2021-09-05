@@ -8,6 +8,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	"tinygo.org/x/bluetooth"
 
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,4 +44,10 @@ func mustGetTimezone(name string) *time.Location {
 		log.WithError(err).WithField("tz", name).Fatal("cannot load timezone")
 	}
 	return tz
+}
+
+func getCounterValue(counter *prometheus.Counter) float64 {
+	m := dto.Metric{}
+	(*counter).Write(&m)
+	return *m.Counter.Value
 }

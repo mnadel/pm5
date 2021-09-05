@@ -15,6 +15,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func lastScan() time.Time {
+	c := make(chan prometheus.Metric, 1)
+	MetricLastScan.Collect(c)
+	m := dto.Metric{}
+	_ = (<-c).Write(&m)
+
+	return time.Unix(int64(*m.Gauge.Value), 0)
+}
+
 func startAdminConsole(config *Configuration) {
 	go func() {
 		r := mux.NewRouter()
@@ -23,16 +32,7 @@ func startAdminConsole(config *Configuration) {
 
 		r.HandleFunc("/ble/last-scan", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
-			c := make(chan prometheus.Metric, 1)
-			MetricLastScan.Collect(c)
-			m := dto.Metric{}
-			_ = (<-c).Write(&m)
-
-			t := time.Unix(int64(*m.Gauge.Value), 0)
-
-			fmt.Fprint(w, t.Format(RFC8601))
-
+			fmt.Fprint(w, lastScan().Format(RFC8601))
 			fmt.Fprint(w, "\n👍\n")
 		})
 
