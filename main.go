@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,7 +14,7 @@ func main() {
 	for _, characteristic := range device.Characteristics {
 		log.WithFields(log.Fields{
 			"service_name": characteristic.Name,
-			"msg":          fmt.Sprintf("%x", characteristic.Message),
+			"msg":          characteristic.MessageName(),
 		}).Info("registering")
 
 		client.Register(characteristic)
