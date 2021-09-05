@@ -23,7 +23,7 @@ const (
 
 type WorkoutType int
 
-// Raw Workout bytes
+// Raw Workout (0x39) bytes
 type RawWorkoutData struct {
 	LogEntry          []byte
 	ElapsedTime       []byte
@@ -34,7 +34,7 @@ type RawWorkoutData struct {
 	AvgPace           []byte
 }
 
-// Decoded Workout data
+// Decoded Workout (0x39) data
 type WorkoutData struct {
 	LogEntry          time.Time
 	ElapsedTime       time.Duration

@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// WorkoutSubscriber receives workout data (0x39 payloads) from the PM5
 type WorkoutSubscriber struct {
 }
 

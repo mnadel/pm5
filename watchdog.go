@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Watchdog keeps an eye on the system.
 type Watchdog struct {
 	config *Configuration
 }
@@ -18,6 +19,7 @@ func NewWatchdog(config *Configuration) *Watchdog {
 }
 
 // Monitor for no BLE scans and terminate self if no progress, let systemd restart us.
+// Returns a channel to cancel the monitor.
 func (w *Watchdog) Monitor() chan<- struct{} {
 	cancel := make(chan struct{}, 1)
 

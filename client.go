@@ -46,6 +46,7 @@ func (c *Client) Listen() {
 	watchdog := NewWatchdog(c.config)
 	watchdogCanceler := watchdog.Monitor()
 
+	// this call to Scan won't return until we call adapter.StopScan()
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {
 		MetricBLEScans.Add(1)
 		MetricLastScan.SetToCurrentTime()
@@ -63,18 +64,20 @@ func (c *Client) Listen() {
 		}
 	})
 
+	// if we get here, we've either found the BLE Peripheral we're scanning for, or hit an error
+
 	if err != nil {
 		log.WithError(err).Fatal("error scanning")
 	}
 
-	// retrieve result from scan
+	// retrieve the result from the scan (i.e. the PM5 device)
 	result := <-scanResultCh
 
-	// channel and callback for syncing on a disconnect event
+	// create a channel and callback for syncing on a disconnect event
 	disconnectCh := make(chan struct{}, 1)
 	c.adapter.SetConnectHandler(func(device bluetooth.Addresser, connected bool) {
 		if !connected {
-			log.Info("detected disconnect")
+			log.WithField("device", device.String()).Info("detected disconnect")
 			disconnectCh <- struct{}{}
 		}
 	})

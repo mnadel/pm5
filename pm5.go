@@ -7,6 +7,7 @@ import (
 	"tinygo.org/x/bluetooth"
 )
 
+// Characterisic represents a BLE Characteristic and how we process its messages.
 type Characterisic struct {
 	Name       string
 	Message    byte
@@ -14,6 +15,7 @@ type Characterisic struct {
 	Subscriber Subscriber
 }
 
+// PM5Device represents the PM5 BLE Peripheral we scan for and listen to.
 type PM5Device struct {
 	DeviceAddress   string
 	ServiceUUID     bluetooth.UUID
@@ -39,6 +41,7 @@ func (c *Characterisic) MessageName() string {
 	return fmt.Sprintf("%x", c.Message)
 }
 
+// CharacteristicUUIDs gets the list of BLE Characteristic UUIDs we're interested in.
 func (d *PM5Device) CharacteristicUUIDs() []bluetooth.UUID {
 	arr := make([]bluetooth.UUID, len(d.Characteristics))
 	for i, c := range d.Characteristics {
@@ -47,6 +50,7 @@ func (d *PM5Device) CharacteristicUUIDs() []bluetooth.UUID {
 	return arr
 }
 
+// FindCharacteristic returns our Characterisic given a discovered BLE Characterisic UUID.
 func (d *PM5Device) FindCharacteristic(uuid bluetooth.UUID) *Characterisic {
 	for _, c := range d.Characteristics {
 		if c.UUID == uuid {
@@ -57,6 +61,7 @@ func (d *PM5Device) FindCharacteristic(uuid bluetooth.UUID) *Characterisic {
 	return nil
 }
 
+// Register sets up the callbacks for listening to a discovered BLE Characteristic.
 func (d *PM5Device) Register(c bluetooth.DeviceCharacteristic) {
 	char := d.FindCharacteristic(c.UUID())
 	if char == nil {
