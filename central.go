@@ -14,20 +14,18 @@ type Central struct {
 }
 
 func NewCentral(config *Configuration) *Central {
-	device := NewPM5Device(config)
-
 	central := &Central{
 		config:      config,
-		device:      device,
+		device:      NewPM5Device(config),
 		adapter:     bluetooth.DefaultAdapter,
 		subscribers: make(map[byte][]Subscriber),
 		exitCh:      make(chan struct{}, 1),
 	}
 
-	for _, characteristic := range device.Characteristics {
+	for _, characteristic := range central.device.Characteristics {
 		log.WithFields(log.Fields{
 			"service_name": characteristic.Name,
-			"msg":          characteristic.MessageName(),
+			"char_id":      characteristic.MessageName(),
 		}).Info("registering")
 
 		central.Register(characteristic)

@@ -72,8 +72,8 @@ func (d *PM5Device) Register(c bluetooth.DeviceCharacteristic) {
 	log.WithFields(log.Fields{
 		"uuid":    c.UUID().String(),
 		"service": char.Name,
-		"msg":     char.MessageName(),
-	}).Info("subscribing to char's messages")
+		"char_id": char.MessageName(),
+	}).Info("subscribing to messages")
 
 	c.EnableNotifications(func(buf []byte) {
 		MetricMessages.WithLabelValues(char.MessageName()).Add(1)
