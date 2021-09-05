@@ -2,8 +2,6 @@ package main
 
 import (
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -25,7 +23,7 @@ const (
 
 type WorkoutType int
 
-// WorkoutData
+// Raw Workout bytes
 type RawWorkoutData struct {
 	LogEntry          []byte
 	ElapsedTime       []byte
@@ -36,7 +34,7 @@ type RawWorkoutData struct {
 	AvgPace           []byte
 }
 
-// WorkoutData
+// Decoded Workout data
 type WorkoutData struct {
 	LogEntry          time.Time
 	ElapsedTime       time.Duration
@@ -60,15 +58,10 @@ func ReadWorkoutData(data []byte) *RawWorkoutData {
 }
 
 func (rd *RawWorkoutData) Decode() *WorkoutData {
-	tz, err := time.LoadLocation("America/Chicago")
-	if err != nil {
-		log.Fatal("cannot load timezone")
-	}
-
 	decodedLogEntry := time.Date(
 		time.Now().Year(), 0, 0, // y m d
 		int(rd.LogEntry[3]), int(rd.LogEntry[2]), 0, 0, // h m s ns
-		tz)
+		mustGetTimezone("America/Chicago"))
 
 	return &WorkoutData{
 		LogEntry:          decodedLogEntry,
