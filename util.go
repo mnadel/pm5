@@ -46,8 +46,17 @@ func mustGetTimezone(name string) *time.Location {
 	return tz
 }
 
-func getCounterValue(counter *prometheus.Counter) float64 {
+func GetPromCounterValue(counter *prometheus.Counter) float64 {
 	m := dto.Metric{}
 	(*counter).Write(&m)
 	return *m.Counter.Value
+}
+
+func GetPromGaugeValue(gauge *prometheus.Gauge) float64 {
+	c := make(chan prometheus.Metric, 1)
+	(*gauge).Collect(c)
+	m := dto.Metric{}
+	_ = (<-c).Write(&m)
+
+	return *m.Gauge.Value
 }

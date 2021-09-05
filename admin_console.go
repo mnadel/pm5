@@ -7,21 +7,15 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	dto "github.com/prometheus/client_model/go"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
 func lastScan() time.Time {
-	c := make(chan prometheus.Metric, 1)
-	MetricLastScan.Collect(c)
-	m := dto.Metric{}
-	_ = (<-c).Write(&m)
-
-	return time.Unix(int64(*m.Gauge.Value), 0)
+	val := GetPromGaugeValue(&MetricLastScan)
+	return time.Unix(int64(val), 0)
 }
 
 func startAdminConsole(config *Configuration) {

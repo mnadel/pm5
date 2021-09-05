@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -50,36 +49,8 @@ func (c *Client) Scan() {
 		log.WithError(err).Fatal("cannot enable ble")
 	}
 
-	cancelMonitor := make(chan struct{}, 1)
-
-	go func() {
-	loop:
-		for {
-			prev := getCounterValue(&MetricBLEScans)
-			timer := time.NewTimer(time.Second * 30)
-			<-timer.C
-			current := getCounterValue(&MetricBLEScans)
-
-			select {
-			case <-cancelMonitor:
-				break loop
-			default:
-			}
-
-			entry := log.WithFields(log.Fields{
-				"last_scan": lastScan().Format(RFC8601),
-				"prev":      prev,
-				"curr":      current,
-			})
-
-			if current == prev {
-				entry.Fatal("deadlock detected")
-				os.Exit(43)
-			} else {
-				entry.Debug("no deadlock detected")
-			}
-		}
-	}()
+	watchdog := NewWatchdog()
+	watchdogCanceler := watchdog.Monitor()
 
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {
 		MetricBLEScans.Add(1)
@@ -93,7 +64,7 @@ func (c *Client) Scan() {
 			}).Info("found device")
 
 			scanResultCh <- result
-			cancelMonitor <- struct{}{}
+			watchdogCanceler <- struct{}{}
 			adapter.StopScan()
 		}
 	})
