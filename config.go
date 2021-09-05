@@ -45,12 +45,9 @@ func NewConfiguration() *Configuration {
 		DisableTimestamp: !isTTY(),
 	})
 
-	if logLevel == log.DebugLevel {
-		log.SetReportCaller(true)
-	}
-
 	log.SetOutput(os.Stdout)
 	log.SetLevel(logLevel)
+	log.SetReportCaller(logLevel == log.DebugLevel)
 
 	config := &Configuration{
 		AdminConsolePort:    viper.GetString("admin_console_port"),

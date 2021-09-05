@@ -17,6 +17,7 @@ func NewWatchdog(config *Configuration) *Watchdog {
 	}
 }
 
+// Monitor for no BLE scans and terminate self if no progress, let systemd restart us.
 func (w *Watchdog) Monitor() chan<- struct{} {
 	cancel := make(chan struct{}, 1)
 
