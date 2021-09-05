@@ -12,9 +12,7 @@ type Configuration struct {
 	AdminConsolePort  string
 	ConfigFile        string
 	LogLevel          log.Level
-	BleScanFreq       time.Duration
 	BleReceiveTimeout time.Duration
-	BleScanTimeout    time.Duration
 }
 
 func NewConfiguration() *Configuration {
