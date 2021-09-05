@@ -9,11 +9,12 @@ import (
 )
 
 type Configuration struct {
-	AdminConsolePort  string
-	ConfigFile        string
-	PM5DeviceAddress  string
-	LogLevel          log.Level
-	BleReceiveTimeout time.Duration
+	AdminConsolePort    string
+	ConfigFile          string
+	PM5DeviceAddress    string
+	LogLevel            log.Level
+	BleReceiveTimeout   time.Duration
+	BleWatchdogDeadline time.Duration
 }
 
 func NewConfiguration() *Configuration {
@@ -52,11 +53,12 @@ func NewConfiguration() *Configuration {
 	log.SetLevel(logLevel)
 
 	config := &Configuration{
-		AdminConsolePort:  viper.GetString("admin_console_port"),
-		PM5DeviceAddress:  viper.GetString("pm5_device_addr"),
-		ConfigFile:        viper.ConfigFileUsed(),
-		LogLevel:          logLevel,
-		BleReceiveTimeout: viper.GetDuration("ble_recv_timeout"),
+		AdminConsolePort:    viper.GetString("admin_console_port"),
+		PM5DeviceAddress:    viper.GetString("pm5_device_addr"),
+		ConfigFile:          viper.ConfigFileUsed(),
+		LogLevel:            logLevel,
+		BleReceiveTimeout:   viper.GetDuration("ble_recv_timeout"),
+		BleWatchdogDeadline: viper.GetDuration("ble_watchdog_deadline"),
 	}
 
 	cwd, _ := os.Getwd()

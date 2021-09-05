@@ -49,7 +49,7 @@ func (c *Client) Scan() {
 		log.WithError(err).Fatal("cannot enable ble")
 	}
 
-	watchdog := NewWatchdog()
+	watchdog := NewWatchdog(c.config)
 	watchdogCanceler := watchdog.Monitor()
 
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {

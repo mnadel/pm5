@@ -8,10 +8,13 @@ import (
 )
 
 type Watchdog struct {
+	config *Configuration
 }
 
-func NewWatchdog() *Watchdog {
-	return &Watchdog{}
+func NewWatchdog(config *Configuration) *Watchdog {
+	return &Watchdog{
+		config: config,
+	}
 }
 
 func (w *Watchdog) Monitor() chan<- struct{} {
@@ -21,7 +24,7 @@ func (w *Watchdog) Monitor() chan<- struct{} {
 	loop:
 		for {
 			prev := GetPromCounterValue(&MetricBLEScans)
-			timer := time.NewTimer(time.Second * 30)
+			timer := time.NewTimer(w.config.BleWatchdogDeadline)
 			<-timer.C
 			current := GetPromCounterValue(&MetricBLEScans)
 
