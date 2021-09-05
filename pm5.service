@@ -8,6 +8,7 @@ User=root
 Group=root
 Type=simple
 ExecStart=/home/pi/go/bin/pm5
+ExecStop=/usr/bin/sleep 10
 Restart=always
 RestartSec=5
 
