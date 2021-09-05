@@ -1,8 +1,11 @@
 [Unit]
 Description=PM5 Service
-Conflicts=bluetooth.service
+Requires=bluetooth.target network.target
+After=bluetooth.target network.target
 
 [Service]
+User=root
+Group=root
 Type=simple
 ExecStart=/home/pi/go/bin/pm5
 Restart=always
