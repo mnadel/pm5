@@ -20,13 +20,9 @@ func main() {
 		client.Register(characteristic)
 	}
 
-	go func() {
-		log.Info("spawning scanner")
-		client.Scan()
-	}()
+	log.Info("starting central")
 
-	log.Info("awaiting termination")
-	<-client.Exit()
+	client.Listen()
 
-	log.Info("scan terminated")
+	log.Info("central terminated")
 }

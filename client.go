@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 	"tinygo.org/x/bluetooth"
 )
@@ -34,11 +32,7 @@ func (c *Client) Register(char *Characterisic) {
 	}
 }
 
-func (c *Client) Exit() chan struct{} {
-	return c.exitCh
-}
-
-func (c *Client) Scan() {
+func (c *Client) Listen() {
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
 
 	if c.adapter == nil {
@@ -73,14 +67,25 @@ func (c *Client) Scan() {
 		log.WithError(err).Fatal("error scanning")
 	}
 
-	log.Info("starting discovery")
+	// retrieve result from scan
 	result := <-scanResultCh
+
+	// channel and callback for syncing on a disconnect event
+	disconnectCh := make(chan struct{}, 1)
+	c.adapter.SetConnectHandler(func(device bluetooth.Addresser, connected bool) {
+		if !connected {
+			log.Info("detected disconnect")
+			disconnectCh <- struct{}{}
+		}
+	})
+
+	log.Info("connecting to peripheral")
 
 	var device *bluetooth.Device
 	device, err = c.adapter.Connect(result.Address, bluetooth.ConnectionParams{})
 	if err != nil {
 		log.WithError(err).Error("cannot connect")
-		c.Exit() <- struct{}{}
+		return
 	}
 
 	MetricBLEConnects.Add(1)
@@ -116,8 +121,8 @@ func (c *Client) Scan() {
 		c.device.Register(discovered)
 	}
 
-	timer := time.NewTimer(c.config.BleReceiveTimeout)
-	<-timer.C
+	log.Info("awaiting disconnect")
+	<-disconnectCh
 
-	c.Exit() <- struct{}{}
+	log.Info("central: complete")
 }
