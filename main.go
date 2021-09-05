@@ -4,15 +4,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var Config *Configuration
-
-func init() {
-	Config = NewConfiguration()
-	StartAdminConsole()
-}
-
 func main() {
-	client := NewClient()
+	config := NewConfiguration()
+	startAdminConsole(config)
+
+	device := NewPM5Device(config)
+	client := NewClient(config, device)
 
 	go func() {
 		log.Info("spawning scanner")

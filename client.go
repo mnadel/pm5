@@ -8,14 +8,16 @@ import (
 )
 
 type Client struct {
+	config  *Configuration
 	device  *PM5Device
 	adapter *bluetooth.Adapter
 	exitCh  chan struct{}
 }
 
-func NewClient() *Client {
+func NewClient(config *Configuration, device *PM5Device) *Client {
 	return &Client{
-		device:  NewPM5Device(),
+		config:  config,
+		device:  device,
 		adapter: bluetooth.DefaultAdapter,
 		exitCh:  make(chan struct{}, 1),
 	}
@@ -100,7 +102,7 @@ func (c *Client) Scan() {
 		log.Infof("received data: %x", buf)
 	})
 
-	timer := time.NewTimer(Config.BleReceiveTimeout)
+	timer := time.NewTimer(c.config.BleReceiveTimeout)
 	<-timer.C
 
 	c.Exit() <- struct{}{}

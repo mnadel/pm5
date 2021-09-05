@@ -11,6 +11,7 @@ import (
 type Configuration struct {
 	AdminConsolePort  string
 	ConfigFile        string
+	PM5DeviceAddress  string
 	LogLevel          log.Level
 	BleReceiveTimeout time.Duration
 }
@@ -52,9 +53,10 @@ func NewConfiguration() *Configuration {
 
 	config := &Configuration{
 		AdminConsolePort:  viper.GetString("admin_console_port"),
-		BleReceiveTimeout: viper.GetDuration("ble_recv_timeout"),
+		PM5DeviceAddress:  viper.GetString("pm5_device_addr"),
 		ConfigFile:        viper.ConfigFileUsed(),
 		LogLevel:          logLevel,
+		BleReceiveTimeout: viper.GetDuration("ble_recv_timeout"),
 	}
 
 	cwd, _ := os.Getwd()

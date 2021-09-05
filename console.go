@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func StartAdminConsole() {
+func startAdminConsole(config *Configuration) {
 	go func() {
 		r := mux.NewRouter()
 
@@ -73,7 +73,7 @@ func StartAdminConsole() {
 		r.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
 		r.Handle("/debug/pprof/block", pprof.Handler("block"))
 
-		log.WithField("port", Config.AdminConsolePort).Info("starting console")
-		log.Info(http.ListenAndServe(Config.AdminConsolePort, r))
+		log.WithField("port", config.AdminConsolePort).Info("starting console")
+		log.Info(http.ListenAndServe(config.AdminConsolePort, r))
 	}()
 }
