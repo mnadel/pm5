@@ -57,7 +57,13 @@ func NewConfiguration() *Configuration {
 		LogLevel:          logLevel,
 	}
 
-	log.WithField("config", *config).Info("loaded configuration")
+	cwd, _ := os.Getwd()
+
+	log.WithFields(log.Fields{
+		"config": *config,
+		"user":   os.Getenv("USER"),
+		"cwd":    cwd,
+	}).Info("loaded configuration")
 
 	return config
 }

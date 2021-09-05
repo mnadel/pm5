@@ -19,7 +19,7 @@ func main() {
 		client.Scan()
 	}()
 
-	log.Info("awaiting scanning termination")
+	log.Info("awaiting termination")
 	<-client.Exit()
 
 	log.Info("scan terminated")
