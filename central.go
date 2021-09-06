@@ -62,6 +62,13 @@ func (c *Central) Listen() {
 		MetricBLEScans.Add(1)
 		MetricLastScan.SetToCurrentTime()
 
+		if c.device.IsPM5(result) {
+			log.WithFields(log.Fields{
+				"address": result.Address.String(),
+				"name":    result.LocalName(),
+			}).Info("found pm5")
+		}
+
 		if result.Address.String() == c.device.DeviceAddress {
 			log.WithFields(log.Fields{
 				"address": result.Address.String(),

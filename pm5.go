@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"tinygo.org/x/bluetooth"
@@ -39,6 +40,10 @@ func NewPM5Device(config *Configuration) *PM5Device {
 
 func (c *Characterisic) MessageName() string {
 	return fmt.Sprintf("%x", c.Message)
+}
+
+func (d *PM5Device) IsPM5(r bluetooth.ScanResult) bool {
+	return IsPM5(r.LocalName())
 }
 
 // RowingCharacteristicUUIDs gets the list of rowing-specific BLE Characteristic UUIDs we're interested in.
@@ -79,4 +84,8 @@ func (d *PM5Device) Register(c bluetooth.DeviceCharacteristic) {
 		MetricMessages.WithLabelValues(char.MessageName()).Add(1)
 		char.Subscriber.Notify(buf)
 	})
+}
+
+func IsPM5(localName string) bool {
+	return strings.HasPrefix(localName, "PM5") && strings.HasSuffix(localName, "Row")
 }

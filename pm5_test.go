@@ -13,3 +13,8 @@ func TestFindCharacteristic(t *testing.T) {
 	assert.NotNil(t, workoutChar)
 	assert.Equal(t, "workout", workoutChar.Name)
 }
+
+func TestIsPM5(t *testing.T) {
+	assert.True(t, IsPM5("PM5 431409475 Row"))
+	assert.False(t, IsPM5("PM5"))
+}
