@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -52,4 +54,17 @@ func GetPromGaugeValue(gauge *prometheus.Gauge) float64 {
 	_ = (<-c).Write(&m)
 
 	return *m.Gauge.Value
+}
+
+func Contains(haystack []string, needle string) bool {
+	for _, s := range haystack {
+		if s == needle {
+			return true
+		}
+	}
+	return false
+}
+
+func Hash(data []byte) string {
+	return fmt.Sprintf("%x", md5.Sum(data))
 }

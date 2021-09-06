@@ -7,22 +7,34 @@ import (
 // WorkoutSubscriber receives workout data (0x39 payloads) from the PM5
 type WorkoutSubscriber struct {
 	config *Configuration
+	dedup  []string
 }
 
 func NewWorkoutSubscriber(config *Configuration) *WorkoutSubscriber {
 	return &WorkoutSubscriber{
 		config: config,
+		dedup:  make([]string, 0),
 	}
 }
 
 func (ws *WorkoutSubscriber) Notify(data []byte) {
-	// abhor the time-based approach here, but the disconnect callback doesn't
-	// seem to get invoked, so while after this "last" subscriber (argh, till we add more subscribers)
-	// we'll force a termination and let systemd restart us
+	hash := Hash(data)
+	log.WithField("hash", hash).Infof("received data: %x", data)
+
+	if Contains(ws.dedup, hash) {
+		log.WithField("hash", hash).Info("ignoring duplicate")
+		return
+	} else {
+		ws.dedup = append(ws.dedup, hash)
+	}
+
+	// i abhor the time-based approach here, but the disconnect callback doesn't seem to get invoked,
+	// so while after this "last" subscriber (argh, till we add more subscribers) we'll force a
+	// termination and let systemd restart us.
+	// update: tiny-go/bluetooth docs say events can get missed and/or duplicated on linux+bluez, see:
+	// https://pkg.go.dev/tinygo.org/x/bluetooth@v0.3.0?utm_source=gopls#Adapter.Scan
 	watchdog := NewWatchdog(ws.config)
 	watchdog.StartDisconnectMonitor()
-
-	log.Infof("received data: %x", data)
 
 	raw := ReadWorkoutData(data)
 	log.WithFields(log.Fields{
