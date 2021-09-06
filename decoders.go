@@ -37,6 +37,7 @@ func DecodeDateTime(data []byte) time.Time {
 	min := DecodeByteNumber(data[2])
 	hr := DecodeByteNumber(data[3])
 
+	// using time.Parse instead of time.Date to avoid timezones
 	formatted := fmt.Sprintf("%d-%02d-%02d %02d:%02d", year, month, day, hr, min)
 
 	t, err := time.Parse("2006-01-02 15:04", formatted)

@@ -85,6 +85,8 @@ func (c *Central) Listen() {
 	result := <-scanResultCh
 
 	// create a channel and callback for syncing on a disconnect event
+	// this doesn't seem to work (it's never called) on my RPi 3B+
+	// see Watchdog for the workaround
 	disconnectCh := make(chan struct{}, 1)
 	c.adapter.SetConnectHandler(func(device bluetooth.Addresser, connected bool) {
 		if !connected {

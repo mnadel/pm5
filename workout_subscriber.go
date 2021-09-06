@@ -16,6 +16,9 @@ func NewWorkoutSubscriber(config *Configuration) *WorkoutSubscriber {
 }
 
 func (ws *WorkoutSubscriber) Notify(data []byte) {
+	// abhor the time-based approach here, but the disconnect callback doesn't
+	// seem to get invoked, so while after this "last" subscriber (argh, till we add more subscribers)
+	// we'll force a termination and let systemd restart us
 	watchdog := NewWatchdog(ws.config)
 	watchdog.StartDisconnectMonitor()
 
