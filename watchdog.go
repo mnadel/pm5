@@ -18,9 +18,35 @@ func NewWatchdog(config *Configuration) *Watchdog {
 	}
 }
 
-// Monitor for no BLE scans and terminate self if no progress, let systemd restart us.
+// StartDisconnectMonitor starts the monitor for a disconnect.
 // Returns a channel to cancel the monitor.
-func (w *Watchdog) Monitor() chan<- struct{} {
+func (w *Watchdog) StartDisconnectMonitor() chan<- struct{} {
+	cancel := make(chan struct{}, 1)
+
+	go func() {
+		deadline := time.Now().Add(w.config.BleWatchdogDisconnect).Format(RFC8601)
+		log.WithField("deadline", deadline).Error("starting disconnect watchdog")
+
+		timer := time.NewTimer(w.config.BleWatchdogDisconnect)
+		<-timer.C
+
+		select {
+		case <-cancel:
+			log.Info("canceling disconnect watchdog")
+			return
+		default:
+		}
+
+		log.WithField("elapsed", w.config.BleWatchdogDisconnect).Error("disconnect not received")
+		os.Exit(53)
+	}()
+
+	return cancel
+}
+
+// ScanMonitor monitors BLE scans and terminate self if no progress, let systemd restart us.
+// Returns a channel to cancel the monitor.
+func (w *Watchdog) ScanMonitor() chan<- struct{} {
 	cancel := make(chan struct{}, 1)
 
 	go func() {

@@ -9,16 +9,18 @@ import (
 )
 
 type Configuration struct {
-	// AdminConsolePort is the port to bind the admin webserver to
+	// AdminConsolePort is the port to bind the admin webserver to.
 	AdminConsolePort string
-	// ConfigFile is the path to the files we loaded
+	// ConfigFile is the path to the files we loaded.
 	ConfigFile string
-	// PM5DeviceAddress is the hex address of the BLE device we're searching for
+	// PM5DeviceAddress is the hex address of the BLE device we're searching for.
 	PM5DeviceAddress string
-	// LogLevel is the logrus level
+	// LogLevel is the logrus level.
 	LogLevel log.Level
-	// BleWatchdogDeadline is the max duration between scans we'll tolerate
+	// BleWatchdogDeadline is the max duration between scans we'll tolerate.
 	BleWatchdogDeadline time.Duration
+	// BleWatchdogDisconnect is the max duration after workout sumary is received before we expect a disconnect.
+	BleWatchdogDisconnect time.Duration
 }
 
 func NewConfiguration() *Configuration {
@@ -54,11 +56,12 @@ func NewConfiguration() *Configuration {
 	log.SetReportCaller(logLevel == log.DebugLevel)
 
 	config := &Configuration{
-		AdminConsolePort:    viper.GetString("admin_console_port"),
-		PM5DeviceAddress:    viper.GetString("pm5_device_addr"),
-		BleWatchdogDeadline: viper.GetDuration("ble_watchdog_deadline"),
-		ConfigFile:          viper.ConfigFileUsed(),
-		LogLevel:            logLevel,
+		AdminConsolePort:      viper.GetString("admin_console_port"),
+		PM5DeviceAddress:      viper.GetString("pm5_device_addr"),
+		BleWatchdogDeadline:   viper.GetDuration("ble_watchdog_deadline"),
+		BleWatchdogDisconnect: viper.GetDuration("ble_watchdog_disconnect"),
+		ConfigFile:            viper.ConfigFileUsed(),
+		LogLevel:              logLevel,
 	}
 
 	cwd, _ := os.Getwd()

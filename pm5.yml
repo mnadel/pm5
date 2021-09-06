@@ -1,4 +1,5 @@
 admin_console_port: ":2112"
 ble_watchdog_deadline: 60s
+ble_watchdog_disconnect: 7m
 pm5_device_addr: "EF:17:C9:1A:D8:18"
 log_level: info

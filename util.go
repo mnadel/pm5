@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"strconv"
-	"time"
 
 	"golang.org/x/crypto/ssh/terminal"
 	"tinygo.org/x/bluetooth"
@@ -36,14 +35,6 @@ func mustParseUUID(uuid string) bluetooth.UUID {
 		log.WithError(err).WithField("uuid", uuid).Fatal("cannot parse uuid")
 	}
 	return u
-}
-
-func mustGetTimezone(name string) *time.Location {
-	tz, err := time.LoadLocation(name)
-	if err != nil {
-		log.WithError(err).WithField("tz", name).Fatal("cannot load timezone")
-	}
-	return tz
 }
 
 // GetPromCounterValue gets the value of a counter.

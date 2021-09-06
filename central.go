@@ -55,7 +55,7 @@ func (c *Central) Listen() {
 	}
 
 	watchdog := NewWatchdog(c.config)
-	watchdogCanceler := watchdog.Monitor()
+	watchdogCanceler := watchdog.ScanMonitor()
 
 	// this call to Scan won't return until we call adapter.StopScan()
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {

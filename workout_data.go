@@ -58,13 +58,8 @@ func ReadWorkoutData(data []byte) *RawWorkoutData {
 }
 
 func (rd *RawWorkoutData) Decode() *WorkoutData {
-	decodedLogEntry := time.Date(
-		time.Now().Year(), 0, 0, // y m d
-		int(rd.LogEntry[3]), int(rd.LogEntry[2]), 0, 0, // h m s ns
-		mustGetTimezone("America/Chicago"))
-
 	return &WorkoutData{
-		LogEntry:          decodedLogEntry,
+		LogEntry:          DecodeDateTime(rd.LogEntry),
 		ElapsedTime:       DecodeDuration(float32(DecodeThreeByteNumber(rd.ElapsedTime)), 0.01),
 		Distance:          float32(DecodeThreeByteNumber(rd.Distance)) * 0.1,
 		AverageStrokeRate: DecodeByteNumber(rd.AverageStrokeRate),

@@ -6,13 +6,19 @@ import (
 
 // WorkoutSubscriber receives workout data (0x39 payloads) from the PM5
 type WorkoutSubscriber struct {
+	config *Configuration
 }
 
-func NewWorkoutSubscriber() *WorkoutSubscriber {
-	return &WorkoutSubscriber{}
+func NewWorkoutSubscriber(config *Configuration) *WorkoutSubscriber {
+	return &WorkoutSubscriber{
+		config: config,
+	}
 }
 
 func (ws *WorkoutSubscriber) Notify(data []byte) {
+	watchdog := NewWatchdog(ws.config)
+	watchdog.StartDisconnectMonitor()
+
 	log.Infof("received data: %x", data)
 
 	raw := ReadWorkoutData(data)

@@ -7,10 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMustGetTimezone(t *testing.T) {
-	assert.NotNil(t, mustGetTimezone("America/Chicago"))
-}
-
 func TestGetPromGaugeValue(t *testing.T) {
 	g := prometheus.NewGauge(prometheus.GaugeOpts{})
 	g.Set(3.14)

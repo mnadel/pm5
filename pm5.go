@@ -31,7 +31,7 @@ func NewPM5Device(config *Configuration) *PM5Device {
 				Name:       "workout",
 				Message:    0x39,
 				UUID:       mustParseUUID("ce060039-43e5-11e4-916c-0800200c9a66"),
-				Subscriber: NewWorkoutSubscriber(),
+				Subscriber: NewWorkoutSubscriber(config),
 			},
 		},
 	}
