@@ -32,7 +32,7 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 	// so while after this "last" subscriber (argh, till we add more subscribers) we'll force a
 	// termination and let systemd restart us.
 	// update: tiny-go/bluetooth docs say events can get missed and/or duplicated on linux+bluez, see:
-	// https://pkg.go.dev/tinygo.org/x/bluetooth@v0.3.0?utm_source=gopls#Adapter.Scan
+	// https://pkg.go.dev/tinygo.org/x/bluetooth@v0.3.0#Adapter.Scan
 	watchdog := NewWatchdog(ws.config)
 	watchdog.StartDisconnectMonitor()
 
