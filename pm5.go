@@ -86,7 +86,7 @@ func (d *PM5Device) Register(c bluetooth.DeviceCharacteristic) {
 	})
 }
 
-// IsPM5 returns true if the BLE local name represents a PM5 device.
+// IsPM5 returns true if the BLE local name represents a PM5 rower device.
 func IsPM5(localName string) bool {
 	return strings.Contains(localName, "PM5") && strings.Contains(localName, "Row")
 }

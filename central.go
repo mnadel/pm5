@@ -10,7 +10,6 @@ type Central struct {
 	device      *PM5Device
 	adapter     *bluetooth.Adapter
 	subscribers map[byte][]Subscriber
-	exitCh      chan struct{}
 }
 
 func NewCentral(config *Configuration) *Central {
@@ -19,7 +18,6 @@ func NewCentral(config *Configuration) *Central {
 		device:      NewPM5Device(config),
 		adapter:     bluetooth.DefaultAdapter,
 		subscribers: make(map[byte][]Subscriber),
-		exitCh:      make(chan struct{}, 1),
 	}
 
 	for _, characteristic := range central.device.RowingCharacteristics {
