@@ -16,5 +16,7 @@ func TestFindCharacteristic(t *testing.T) {
 
 func TestIsPM5(t *testing.T) {
 	assert.True(t, IsPM5("PM5 431409475 Row"))
+	assert.True(t, IsPM5("PM5 5882300 Row"))
 	assert.False(t, IsPM5("PM5"))
+	assert.False(t, IsPM5("Row"))
 }
