@@ -38,7 +38,7 @@ func (w *Watchdog) StartDisconnectMonitor() chan<- struct{} {
 		}
 
 		log.WithField("elapsed", w.config.BleWatchdogDisconnect).Error("disconnect not received")
-		os.Exit(53)
+		os.Exit(ERR_NODISCONNECT)
 	}()
 
 	return cancel
@@ -71,7 +71,7 @@ func (w *Watchdog) ScanMonitor() chan<- struct{} {
 
 			if current == prev {
 				entry.Fatal("deadlock detected")
-				os.Exit(43)
+				os.Exit(ERR_BLEDEADLOCK)
 			} else {
 				entry.Debug("no deadlock detected")
 			}

@@ -2,6 +2,8 @@
 
 A Bluetooth Low-Energy (BLE) Central device that connects to a Concept2 PM5 and receives workout summary data.
 
+Ultimate goal is to upload workout data to Logbook (currently awaiting OAuth2 application creds from Concept2) -- i.e. phone-less integration with Concept2's Logbook.
+
 # Installing
 
 1. Clone this repo
