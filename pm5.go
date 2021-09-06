@@ -17,16 +17,16 @@ type Characterisic struct {
 
 // PM5Device represents the PM5 BLE Peripheral we scan for and listen to.
 type PM5Device struct {
-	DeviceAddress   string
-	ServiceUUID     bluetooth.UUID
-	Characteristics []*Characterisic
+	DeviceAddress         string
+	RowingServiceUUID     bluetooth.UUID
+	RowingCharacteristics []*Characterisic
 }
 
 func NewPM5Device(config *Configuration) *PM5Device {
 	return &PM5Device{
-		DeviceAddress: config.PM5DeviceAddress,
-		ServiceUUID:   mustParseUUID("ce060030-43e5-11e4-916c-0800200c9a66"),
-		Characteristics: []*Characterisic{
+		DeviceAddress:     config.PM5DeviceAddress,
+		RowingServiceUUID: mustParseUUID("ce060030-43e5-11e4-916c-0800200c9a66"),
+		RowingCharacteristics: []*Characterisic{
 			{
 				Name:       "workout",
 				Message:    0x39,
@@ -41,18 +41,18 @@ func (c *Characterisic) MessageName() string {
 	return fmt.Sprintf("%x", c.Message)
 }
 
-// CharacteristicUUIDs gets the list of BLE Characteristic UUIDs we're interested in.
-func (d *PM5Device) CharacteristicUUIDs() []bluetooth.UUID {
-	arr := make([]bluetooth.UUID, len(d.Characteristics))
-	for i, c := range d.Characteristics {
+// RowingCharacteristicUUIDs gets the list of rowing-specific BLE Characteristic UUIDs we're interested in.
+func (d *PM5Device) RowingCharacteristicUUIDs() []bluetooth.UUID {
+	arr := make([]bluetooth.UUID, len(d.RowingCharacteristics))
+	for i, c := range d.RowingCharacteristics {
 		arr[i] = c.UUID
 	}
 	return arr
 }
 
-// FindCharacteristic returns our Characterisic given a discovered BLE Characterisic UUID.
-func (d *PM5Device) FindCharacteristic(uuid bluetooth.UUID) *Characterisic {
-	for _, c := range d.Characteristics {
+// FindRowingCharacteristic returns our rowing Characterisic given a discovered BLE Characterisic UUID.
+func (d *PM5Device) FindRowingCharacteristic(uuid bluetooth.UUID) *Characterisic {
+	for _, c := range d.RowingCharacteristics {
 		if c.UUID == uuid {
 			return c
 		}
@@ -63,7 +63,7 @@ func (d *PM5Device) FindCharacteristic(uuid bluetooth.UUID) *Characterisic {
 
 // Register sets up the callbacks for listening to a discovered BLE Characteristic.
 func (d *PM5Device) Register(c bluetooth.DeviceCharacteristic) {
-	char := d.FindCharacteristic(c.UUID())
+	char := d.FindRowingCharacteristic(c.UUID())
 	if char == nil {
 		log.WithField("uuid", c.UUID()).Error("error looking up characteristic")
 		return

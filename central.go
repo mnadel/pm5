@@ -22,7 +22,7 @@ func NewCentral(config *Configuration) *Central {
 		exitCh:      make(chan struct{}, 1),
 	}
 
-	for _, characteristic := range central.device.Characteristics {
+	for _, characteristic := range central.device.RowingCharacteristics {
 		log.WithFields(log.Fields{
 			"service_name": characteristic.Name,
 			"char_id":      characteristic.MessageName(),
@@ -107,33 +107,33 @@ func (c *Central) Listen() {
 	MetricBLEConnects.Add(1)
 	log.WithField("address", result.Address.String()).Info("connected")
 
-	srvcs, err := device.DiscoverServices([]bluetooth.UUID{c.device.ServiceUUID})
+	srvcs, err := device.DiscoverServices([]bluetooth.UUID{c.device.RowingServiceUUID})
 	if err != nil {
-		log.WithError(err).Fatal("cannot discover services")
+		log.WithError(err).Fatal("cannot discover rowing service")
 	}
 
 	if len(srvcs) == 0 {
-		log.Fatal("could not find PM5 service")
+		log.Fatal("could not find PM5 rowing service")
 	}
 
-	characteristicUUIDs := c.device.CharacteristicUUIDs()
+	characteristicUUIDs := c.device.RowingCharacteristicUUIDs()
 
 	log.WithFields(log.Fields{
 		"service": srvcs[0].UUID().String(),
 		"chars":   characteristicUUIDs,
-	}).Info("found service, looking for chars")
+	}).Info("found rowing service, looking for rowing characteristics")
 
 	discoveredCharacteristics, err := srvcs[0].DiscoverCharacteristics(characteristicUUIDs)
 	if err != nil {
-		log.WithError(err).Fatal("cannot discover characteristics")
+		log.WithError(err).Fatal("cannot discover rowing characteristics")
 	}
 
 	if len(discoveredCharacteristics) != len(characteristicUUIDs) {
-		log.WithField("discovered", discoveredCharacteristics).Error("cannot find every characteristic")
+		log.WithField("discovered", discoveredCharacteristics).Error("found subset of characteristics")
 	}
 
 	for _, discovered := range discoveredCharacteristics {
-		log.WithField("char", discovered.UUID().String())
+		log.WithField("characteristic", discovered.UUID().String())
 		c.device.Register(discovered)
 	}
 
