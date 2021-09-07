@@ -18,5 +18,5 @@ func main() {
 	log.Info("starting central")
 	central.Listen()
 
-	log.Info("central terminated")
+	log.Info("central exiting")
 }
