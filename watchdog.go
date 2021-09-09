@@ -21,7 +21,7 @@ func NewWatchdog(config *Configuration) *Watchdog {
 // StartDisconnectMonitor starts the monitor for a disconnect.
 func (w *Watchdog) StartDisconnectMonitor() {
 	go func() {
-		deadline := time.Now().Add(w.config.BleWatchdogDisconnect).Format(RFC8601)
+		deadline := time.Now().Add(w.config.BleWatchdogDisconnect).Format(ISO8601)
 		log.WithField("deadline", deadline).Error("starting disconnect watchdog")
 
 		timer := time.NewTimer(w.config.BleWatchdogDisconnect)
@@ -52,7 +52,7 @@ func (w *Watchdog) ScanMonitor() chan<- struct{} {
 			}
 
 			entry := log.WithFields(log.Fields{
-				"last_scan": lastScan().Format(RFC8601),
+				"last_scan": lastScan().Format(ISO8601),
 				"prev":      prev,
 				"curr":      current,
 			})

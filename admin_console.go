@@ -26,7 +26,7 @@ func startAdminConsole(config *Configuration) {
 
 		r.HandleFunc("/ble/last-scan", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-			fmt.Fprint(w, lastScan().Format(RFC8601))
+			fmt.Fprint(w, lastScan().Format(ISO8601))
 			fmt.Fprint(w, "\n👍\n")
 		})
 

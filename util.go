@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	RFC8601 = "2006-01-02 15:04:05"
+	ISO8601 = "2006-01-02 15:04:05"
 )
 
 func shouldParseAtoi(str string) int {

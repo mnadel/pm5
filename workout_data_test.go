@@ -21,7 +21,7 @@ func TestDecodeRealWorkoutData(t *testing.T) {
 	}
 	parsed := raw.Decode()
 
-	assert.Equal(t, MustParseDateTime("2021-08-16 18:22"), parsed.LogEntry)
+	assert.Equal(t, MustParseDateTime("2021-08-16 18:22 CDT"), parsed.LogEntry)
 	assert.Equal(t, MustParseDuration("4m7.6s"), parsed.ElapsedTime)
 	assert.Equal(t, float32(801.0), parsed.Distance)
 	assert.Equal(t, WorkoutTypeJustRowSplits, parsed.WorkoutType)
@@ -41,7 +41,7 @@ func TestDecodeRealWorkoutData2(t *testing.T) {
 	}
 	parsed := raw.Decode()
 
-	assert.Equal(t, MustParseDateTime("2021-09-05 17:38"), parsed.LogEntry)
+	assert.Equal(t, MustParseDateTime("2021-09-05 17:38 CDT"), parsed.LogEntry)
 	assert.Equal(t, MustParseDuration("3m59.7s"), parsed.ElapsedTime)
 	assert.Equal(t, float32(770.0), parsed.Distance)
 	assert.Equal(t, WorkoutTypeJustRowSplits, parsed.WorkoutType)
@@ -97,7 +97,7 @@ func TestDecodeWorkoutData(t *testing.T) {
 }
 
 func TestMustParseDateTime(t *testing.T) {
-	dt := MustParseDateTime("2021-09-05 17:38")
+	dt := MustParseDateTime("2021-09-05 17:38 CDT")
 
 	assert.Equal(t, 2021, dt.Year())
 	assert.Equal(t, time.Month(9), dt.Month())
@@ -115,9 +115,9 @@ func MustParseDuration(formatted string) time.Duration {
 }
 
 func MustParseDateTime(formatted string) time.Time {
-	t, err := time.Parse("2006-01-02 15:04", formatted)
+	t, err := time.Parse("2006-01-02 15:04 MST", formatted)
 	if err != nil {
-		log.WithError(err).WithField("dt", formatted).Fatalf("cannot parse time")
+		log.WithError(err).WithField("dt", formatted).Fatal("cannot parse time")
 	}
-	return t
+	return t.Local()
 }

@@ -2,10 +2,7 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func DecodeByteNumber(data byte) uint8 {
@@ -37,16 +34,5 @@ func DecodeDateTime(data []byte) time.Time {
 	min := DecodeByteNumber(data[2])
 	hr := DecodeByteNumber(data[3])
 
-	// using time.Parse instead of time.Date to avoid timezones
-	formatted := fmt.Sprintf("%d-%02d-%02d %02d:%02d", year, month, day, hr, min)
-
-	t, err := time.Parse("2006-01-02 15:04", formatted)
-	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"data":      data,
-			"formatted": formatted,
-		}).Fatal("cannot decode datetime")
-	}
-
-	return t
+	return time.Date(int(year), time.Month(month), int(day), int(hr), int(min), 0, 0, time.Local)
 }
