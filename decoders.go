@@ -34,5 +34,5 @@ func DecodeDateTime(data []byte) time.Time {
 	min := DecodeByteNumber(data[2])
 	hr := DecodeByteNumber(data[3])
 
-	return time.Date(int(year), time.Month(month), int(day), int(hr), int(min), 0, 0, time.Local)
+	return time.Date(int(year), time.Month(month), int(day), int(hr), int(min), 0, 0, time.Now().Location())
 }
