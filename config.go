@@ -13,8 +13,6 @@ type Configuration struct {
 	AdminConsolePort string
 	// ConfigFile is the path to the files we loaded.
 	ConfigFile string
-	// PM5DeviceAddress is the hex address of the BLE device we're searching for.
-	PM5DeviceAddress string
 	// LogLevel is the logrus level.
 	LogLevel log.Level
 	// BleWatchdogDeadline is the max duration between scans we'll tolerate.
@@ -57,7 +55,6 @@ func NewConfiguration() *Configuration {
 
 	config := &Configuration{
 		AdminConsolePort:      viper.GetString("admin_console_port"),
-		PM5DeviceAddress:      viper.GetString("pm5_device_addr"),
 		BleWatchdogDeadline:   viper.GetDuration("ble_watchdog_deadline"),
 		BleWatchdogDisconnect: viper.GetDuration("ble_watchdog_disconnect"),
 		ConfigFile:            viper.ConfigFileUsed(),

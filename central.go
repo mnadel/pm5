@@ -64,15 +64,8 @@ func (c *Central) Listen() {
 			log.WithFields(log.Fields{
 				"address": result.Address.String(),
 				"name":    result.LocalName(),
-			}).Info("found pm5")
-		}
-
-		if result.Address.String() == c.device.DeviceAddress {
-			log.WithFields(log.Fields{
-				"address": result.Address.String(),
-				"name":    result.LocalName(),
 				"rssi":    result.RSSI,
-			}).Info("found device")
+			}).Info("found pm5")
 
 			scanResultCh <- result
 			watchdogCanceler <- struct{}{}

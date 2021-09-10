@@ -25,7 +25,6 @@ type PM5Device struct {
 
 func NewPM5Device(config *Configuration) *PM5Device {
 	return &PM5Device{
-		DeviceAddress:     config.PM5DeviceAddress,
 		RowingServiceUUID: mustParseUUID("ce060030-43e5-11e4-916c-0800200c9a66"),
 		RowingCharacteristics: []*Characterisic{
 			{
