@@ -46,7 +46,7 @@ func NewConfiguration() *Configuration {
 		DisableColors:    true,
 		FullTimestamp:    true,
 		ForceQuote:       true,
-		DisableTimestamp: !isTTY(),
+		DisableTimestamp: !IsTTY(),
 	})
 
 	log.SetOutput(os.Stdout)

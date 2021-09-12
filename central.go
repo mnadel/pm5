@@ -5,6 +5,7 @@ import (
 	"tinygo.org/x/bluetooth"
 )
 
+// Central represents our BLE Central device.
 type Central struct {
 	config      *Configuration
 	device      *PM5Device
@@ -32,6 +33,7 @@ func NewCentral(config *Configuration) *Central {
 	return central
 }
 
+// Register registers a Characteristic to which our Central will receive messages.
 func (c *Central) Register(char *Characterisic) {
 	if val, ok := c.subscribers[char.Message]; ok {
 		c.subscribers[char.Message] = append(val, char.Subscriber)
@@ -41,6 +43,8 @@ func (c *Central) Register(char *Characterisic) {
 	}
 }
 
+// Listen is a blocking call that scans for and connects to a PM5 Rower BLE Peripheral, and then awaits
+// Characteristic messages to be received and processes them.
 func (c *Central) Listen() {
 	scanResultCh := make(chan bluetooth.ScanResult, 1)
 

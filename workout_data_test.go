@@ -120,5 +120,5 @@ func MustParseDateTime(formatted string) time.Time {
 		log.WithError(err).WithField("dt", formatted).Fatal("cannt parse date")
 	}
 
-	return time.Date(dt.Year(), dt.Month(), dt.Day(), dt.Hour(), dt.Minute(), 0, 0, time.Now().Location())
+	return time.Date(dt.Year(), dt.Month(), dt.Day(), dt.Hour(), dt.Minute(), 0, 0, localTimezone)
 }

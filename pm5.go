@@ -8,7 +8,7 @@ import (
 	"tinygo.org/x/bluetooth"
 )
 
-// Characterisic represents a BLE Characteristic and how we process its messages.
+// Characterisic represents a BLE Characteristic we subscribe to receiving.
 type Characterisic struct {
 	Name       string
 	Message    byte
@@ -25,22 +25,24 @@ type PM5Device struct {
 
 func NewPM5Device(config *Configuration) *PM5Device {
 	return &PM5Device{
-		RowingServiceUUID: mustParseUUID("ce060030-43e5-11e4-916c-0800200c9a66"),
+		RowingServiceUUID: MustParseUUID("ce060030-43e5-11e4-916c-0800200c9a66"),
 		RowingCharacteristics: []*Characterisic{
 			{
 				Name:       "workout",
 				Message:    0x39,
-				UUID:       mustParseUUID("ce060039-43e5-11e4-916c-0800200c9a66"),
+				UUID:       MustParseUUID("ce060039-43e5-11e4-916c-0800200c9a66"),
 				Subscriber: NewWorkoutSubscriber(config),
 			},
 		},
 	}
 }
 
+// MessageName returns a text representation of the byte offset of the Characteristic's message.
 func (c *Characterisic) MessageName() string {
 	return fmt.Sprintf("%x", c.Message)
 }
 
+// IsPM5 returns true if the parameter represents a PM5 rowing machine.
 func (d *PM5Device) IsPM5(r bluetooth.ScanResult) bool {
 	return IsPM5(r.LocalName())
 }

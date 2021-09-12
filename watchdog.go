@@ -22,7 +22,7 @@ func NewWatchdog(config *Configuration) *Watchdog {
 func (w *Watchdog) StartDisconnectMonitor() {
 	go func() {
 		deadline := time.Now().Add(w.config.BleWatchdogDisconnect).Format(ISO8601)
-		log.WithField("deadline", deadline).Error("starting disconnect watchdog")
+		log.WithField("deadline", deadline).Info("starting disconnect watchdog")
 
 		timer := time.NewTimer(w.config.BleWatchdogDisconnect)
 		<-timer.C

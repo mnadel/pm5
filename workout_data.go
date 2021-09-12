@@ -45,6 +45,7 @@ type WorkoutData struct {
 	AvgPace           time.Duration
 }
 
+// ReadWorkoutData reads an array of bytes into a raw struct of Workout data.
 func ReadWorkoutData(data []byte) *RawWorkoutData {
 	return &RawWorkoutData{
 		LogEntry:          data[0:4],
@@ -57,6 +58,7 @@ func ReadWorkoutData(data []byte) *RawWorkoutData {
 	}
 }
 
+// Decode returns a parsed/decoded set of bytes into a WorkoutData.
 func (rd *RawWorkoutData) Decode() *WorkoutData {
 	return &WorkoutData{
 		LogEntry:          DecodeDateTime(rd.LogEntry),
