@@ -1,8 +1,6 @@
 # PM5
 
-A Bluetooth Low-Energy (BLE) Central device that connects to a Concept2 PM5 and receives workout summary data.
-
-Ultimate goal is to upload workout data to Logbook (currently awaiting OAuth2 application creds from Concept2), i.e. a phone-less integration with Concept2's Logbook.
+A Bluetooth Low-Energy (BLE) Central device that connects to a Concept2 PM5 and receives workout summary data and transmits it to [C2's Logbook](https://log.concept2.com/).
 
 # Installing
 
@@ -20,3 +18,7 @@ NB you'll also need to pair your device with your PM5. On my Pi it looked someth
 [bluetooth]# pair <addr>
 [bluetooth]# trust <addr>
 ```
+
+git@github.com:mnadel/pm5-auth.git# Auth
+
+OAuth callbacks are handled by https://github.com/mnadel/pm5-auth
