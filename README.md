@@ -19,6 +19,6 @@ NB you'll also need to pair your device with your PM5. On my Pi it looked someth
 [bluetooth]# trust <addr>
 ```
 
-git@github.com:mnadel/pm5-auth.git# Auth
+# Auth
 
 OAuth callbacks are handled by https://github.com/mnadel/pm5-auth
