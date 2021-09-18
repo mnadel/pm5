@@ -1,8 +1,6 @@
 # PM5
 
-A Bluetooth Low-Energy (BLE) Central device that connects to a Concept2 PM5 and receives workout summary data.
-
-Ultimate goal is to upload workout data to Logbook (currently awaiting OAuth2 application creds from Concept2), i.e. a phone-less integration with Concept2's Logbook.
+A Bluetooth Low-Energy (BLE) Central device that connects to a Concept2 PM5 and receives workout summary data and transmits it to [C2's Logbook](https://log.concept2.com/).
 
 # Installing
 
@@ -20,3 +18,25 @@ NB you'll also need to pair your device with your PM5. On my Pi it looked someth
 [bluetooth]# pair <addr>
 [bluetooth]# trust <addr>
 ```
+
+# Auth
+
+OAuth callbacks are handled by a [Cloudflare Worker](https://workers.cloudflare.com/) deployed to https://auth.pm5-book.workers.dev/c2.
+
+Its source is available at https://github.com/mnadel/pm5-auth.
+
+First, generate a link to authenticate PM5 Book:
+
+```
+> ./pm5 -auth
+```
+
+After navigating to that link and authorizing this application, you'll be shown a command to run. It'll look something like this:
+
+```
+> ./pm5 -access xxxyyy -refresh abc123
+```
+
+And with that, PM5 Book will have everything it needs to update Logbook on your behalf!
+
+Note that the refresh token is valid for a year, so you'll eventually need to run through the above auth flow again.
