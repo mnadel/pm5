@@ -19,6 +19,8 @@ type Configuration struct {
 	BleWatchdogDeadline time.Duration
 	// BleWatchdogDisconnect is the max duration after workout sumary is received before we expect a disconnect.
 	BleWatchdogDisconnect time.Duration
+	// LogbookEndpoint is the endpoint of Concept2's Logbook
+	LogbookEndpoint string
 }
 
 func NewConfiguration() *Configuration {
@@ -59,6 +61,7 @@ func NewConfiguration() *Configuration {
 		BleWatchdogDisconnect: viper.GetDuration("ble_watchdog_disconnect"),
 		ConfigFile:            viper.ConfigFileUsed(),
 		LogLevel:              logLevel,
+		LogbookEndpoint:       "https://log-dev.concept2.com",
 	}
 
 	cwd, _ := os.Getwd()
