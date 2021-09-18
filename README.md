@@ -21,7 +21,9 @@ NB you'll also need to pair your device with your PM5. On my Pi it looked someth
 
 # Auth
 
-OAuth callbacks are handled by a [Cloudflare Worker](https://workers.cloudflare.com/) deployed to https://auth.pm5-book.workers.dev/c2
+OAuth callbacks are handled by a [Cloudflare Worker](https://workers.cloudflare.com/) deployed to https://auth.pm5-book.workers.dev/c2.
+
+Its source is available at https://github.com/mnadel/pm5-auth.
 
 First, generate a link to authenticate PM5 Book:
 
