@@ -62,7 +62,9 @@ func main() {
 }
 
 func valid(auth bool, access, refresh string) bool {
-	if auth {
+	if !auth && access == "" && refresh == "" {
+		return true
+	} else if auth {
 		return access == "" && refresh == ""
 	} else {
 		return access != "" && refresh != ""
