@@ -34,7 +34,7 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 	// update: tiny-go/bluetooth docs say events can get missed and/or duplicated on linux+bluez, see:
 	// https://pkg.go.dev/tinygo.org/x/bluetooth@v0.3.0#Adapter.Scan
 	watchdog := NewWatchdog(ws.config)
-	watchdog.StartDisconnectMonitor()
+	watchdog.StartWorkoutDisconnectMonitor()
 
 	raw := ReadWorkoutData(data)
 	log.WithFields(log.Fields{
@@ -47,4 +47,14 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 		"decoded": decoded,
 		"message": "workout",
 	}).Info("decoded data")
+
+	logbook, err := NewLogbook(ws.config)
+	if err != nil {
+		log.WithError(err).Error("cannot create logbook")
+		return
+	}
+
+	if err := logbook.PublishWorkout(*decoded); err != nil {
+		log.WithError(err).WithField("workout", decoded).Error("cannot publish workout")
+	}
 }

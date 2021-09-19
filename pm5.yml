@@ -1,4 +1,5 @@
 admin_console_port: ":2112"
 ble_watchdog_deadline: 60s
-ble_watchdog_disconnect: 7m
+ble_watchdog_workout_disconnect: 7m
+ble_watchdog_workout_deadline: 45m
 log_level: info

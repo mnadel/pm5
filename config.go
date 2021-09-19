@@ -18,7 +18,9 @@ type Configuration struct {
 	// BleWatchdogDeadline is the max duration between scans we'll tolerate.
 	BleWatchdogDeadline time.Duration
 	// BleWatchdogDisconnect is the max duration after workout sumary is received before we expect a disconnect.
-	BleWatchdogDisconnect time.Duration
+	BleWatchdogWorkoutDisconnect time.Duration
+	// BleWatchdogWorkoutDealine is the max duration after we connect to the PM5 before we expect to receive a workout summary.
+	BleWatchdogWorkoutDeadline time.Duration
 	// LogbookEndpoint is the endpoint of Concept2's Logbook
 	LogbookEndpoint string
 }
@@ -56,12 +58,13 @@ func NewConfiguration() *Configuration {
 	log.SetReportCaller(logLevel == log.DebugLevel)
 
 	config := &Configuration{
-		AdminConsolePort:      viper.GetString("admin_console_port"),
-		BleWatchdogDeadline:   viper.GetDuration("ble_watchdog_deadline"),
-		BleWatchdogDisconnect: viper.GetDuration("ble_watchdog_disconnect"),
-		ConfigFile:            viper.ConfigFileUsed(),
-		LogLevel:              logLevel,
-		LogbookEndpoint:       "https://log-dev.concept2.com",
+		AdminConsolePort:             viper.GetString("admin_console_port"),
+		BleWatchdogDeadline:          viper.GetDuration("ble_watchdog_deadline"),
+		BleWatchdogWorkoutDisconnect: viper.GetDuration("ble_watchdog_workout_disconnect"),
+		BleWatchdogWorkoutDeadline:   viper.GetDuration("ble_watchdog_workout_deadline"),
+		ConfigFile:                   viper.ConfigFileUsed(),
+		LogLevel:                     logLevel,
+		LogbookEndpoint:              "https://log-dev.concept2.com",
 	}
 
 	cwd, _ := os.Getwd()

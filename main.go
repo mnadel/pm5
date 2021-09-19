@@ -12,6 +12,7 @@ const (
 	ERR_NODISCONNECT = 41
 	ERR_USAGE        = 43
 	ERR_CANTSTORE    = 47
+	ERR_NOWORKOUT    = 53
 )
 
 func main() {

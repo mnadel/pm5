@@ -19,6 +19,16 @@ NB you'll also need to pair your device with your PM5. On my Pi it looked someth
 [bluetooth]# trust <addr>
 ```
 
+# Configuration
+
+## `ble_watchdog_workout_deadline`
+
+It's possible to connect to the PM5 but never receive Workout data nor a disconnect event. In this case, we'd indefinitely await Workout data.
+
+This setting should be longer than your expected workout. We'll start a watchdog timer when we connect to the PM5 and if we don't receive a Workout summary before this deadline, we'll reset ourselves.
+
+My usage of the Concept2 is for a 5-10 min warmup and cooldown, so I use a relatively low value for this (15m).
+
 # Auth
 
 OAuth callbacks are handled by a [Cloudflare Worker](https://workers.cloudflare.com/) deployed to https://auth.pm5-book.workers.dev/c2.

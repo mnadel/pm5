@@ -139,6 +139,8 @@ func (c *Central) Listen() {
 		c.device.Register(discovered)
 	}
 
+	watchdog.StartWorkoutMonitor()
+
 	log.Info("awaiting disconnect")
 	<-disconnectCh
 

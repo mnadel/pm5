@@ -18,16 +18,30 @@ func NewWatchdog(config *Configuration) *Watchdog {
 	}
 }
 
-// StartDisconnectMonitor starts the monitor for a disconnect.
-func (w *Watchdog) StartDisconnectMonitor() {
+// StartWorkoutMonitor starts the monitor for receiving Workout data.
+func (w *Watchdog) StartWorkoutMonitor() {
 	go func() {
-		deadline := time.Now().Add(w.config.BleWatchdogDisconnect).Format(ISO8601)
-		log.WithField("deadline", deadline).Info("starting disconnect watchdog")
+		deadline := time.Now().Add(w.config.BleWatchdogWorkoutDeadline).Format(ISO8601)
+		log.WithField("deadline", deadline).Info("starting workout watchdog")
 
-		timer := time.NewTimer(w.config.BleWatchdogDisconnect)
+		timer := time.NewTimer(w.config.BleWatchdogWorkoutDeadline)
 		<-timer.C
 
-		log.WithField("elapsed", w.config.BleWatchdogDisconnect).Error("disconnect not received")
+		log.WithField("elapsed", w.config.BleWatchdogWorkoutDeadline).Error("workout not received")
+		os.Exit(ERR_NOWORKOUT)
+	}()
+}
+
+// StartWorkoutDisconnectMonitor starts the monitor for a disconnect after receiving Workout data.
+func (w *Watchdog) StartWorkoutDisconnectMonitor() {
+	go func() {
+		deadline := time.Now().Add(w.config.BleWatchdogWorkoutDisconnect).Format(ISO8601)
+		log.WithField("deadline", deadline).Info("starting disconnect watchdog")
+
+		timer := time.NewTimer(w.config.BleWatchdogWorkoutDisconnect)
+		<-timer.C
+
+		log.WithField("elapsed", w.config.BleWatchdogWorkoutDisconnect).Error("disconnect not received")
 		os.Exit(ERR_NODISCONNECT)
 	}()
 }
