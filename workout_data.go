@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -69,6 +70,11 @@ func (rd *RawWorkoutData) Decode() *WorkoutData {
 		WorkoutType:       WorkoutType(int(rd.WorkoutType)),
 		AvgPace:           DecodeDuration(float32(DecodeTwoByteNumber(rd.AvgPace)), 0.1),
 	}
+}
+
+func (wd *WorkoutData) AsJSON() string {
+	str, _ := json.Marshal(wd)
+	return string(str)
 }
 
 /*

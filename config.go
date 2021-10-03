@@ -8,9 +8,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	MAX_LOGFILE_SIZE = 5*2 ^ 20 // 5MB
+)
+
 type Configuration struct {
-	// AdminConsolePort is the port to bind the admin webserver to.
-	AdminConsolePort string
+	// LogFile is the path to our logfile
+	LogFile string
 	// ConfigFile is the path to the files we loaded.
 	ConfigFile string
 	// LogLevel is the logrus level.
@@ -21,8 +25,6 @@ type Configuration struct {
 	BleWatchdogWorkoutDisconnect time.Duration
 	// BleWatchdogWorkoutDealine is the max duration after we connect to the PM5 before we expect to receive a workout summary.
 	BleWatchdogWorkoutDeadline time.Duration
-	// LogbookEndpoint is the endpoint of Concept2's Logbook
-	LogbookEndpoint string
 }
 
 func NewConfiguration() *Configuration {
@@ -47,24 +49,38 @@ func NewConfiguration() *Configuration {
 	}
 
 	log.SetFormatter(&log.TextFormatter{
-		DisableColors:    true,
-		FullTimestamp:    true,
-		ForceQuote:       true,
-		DisableTimestamp: !IsTTY(),
+		DisableColors: true,
+		FullTimestamp: true,
+		ForceQuote:    true,
 	})
 
-	log.SetOutput(os.Stdout)
+	var logfileMode int
+
+	if info, err := os.Stat(viper.GetString("LOG_FILE")); os.IsNotExist(err) {
+		logfileMode = os.O_APPEND
+	} else if err != nil {
+		log.WithError(err).WithField("file", viper.GetString("LOG_FILE")).Fatal("cannot stat logfile")
+	} else if info.Size() >= MAX_LOGFILE_SIZE {
+		logfileMode = os.O_TRUNC
+	} else {
+		logfileMode = os.O_APPEND
+	}
+
+	if f, err := os.OpenFile(viper.GetString("LOG_FILE"), os.O_CREATE|logfileMode, 0644); err != nil {
+		panic(err.Error())
+	} else {
+		log.SetOutput(f)
+	}
+
 	log.SetLevel(logLevel)
 	log.SetReportCaller(logLevel == log.DebugLevel)
 
 	config := &Configuration{
-		AdminConsolePort:             viper.GetString("admin_console_port"),
 		BleWatchdogDeadline:          viper.GetDuration("ble_watchdog_deadline"),
 		BleWatchdogWorkoutDisconnect: viper.GetDuration("ble_watchdog_workout_disconnect"),
 		BleWatchdogWorkoutDeadline:   viper.GetDuration("ble_watchdog_workout_deadline"),
 		ConfigFile:                   viper.ConfigFileUsed(),
 		LogLevel:                     logLevel,
-		LogbookEndpoint:              "https://log-dev.concept2.com",
 	}
 
 	cwd, _ := os.Getwd()

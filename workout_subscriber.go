@@ -1,33 +1,23 @@
 package main
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 )
 
 // WorkoutSubscriber receives workout data (0x39 payloads) from the PM5 Rower.
 type WorkoutSubscriber struct {
 	config *Configuration
-	dedup  []string
 }
 
 func NewWorkoutSubscriber(config *Configuration) *WorkoutSubscriber {
 	return &WorkoutSubscriber{
 		config: config,
-		dedup:  make([]string, 0),
 	}
 }
 
 func (ws *WorkoutSubscriber) Notify(data []byte) {
-	hash := Hash(data)
-	log.WithField("hash", hash).Infof("received data: %x", data)
-
-	if Contains(ws.dedup, hash) {
-		log.WithField("hash", hash).Info("ignoring duplicate")
-		return
-	} else {
-		ws.dedup = append(ws.dedup, hash)
-	}
-
 	// i abhor the time-based approach here, but the disconnect callback doesn't seem to get invoked,
 	// so a while after this "last" subscriber (argh, till we add more subscribers) we'll force a
 	// termination and let systemd restart us.
@@ -48,13 +38,5 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 		"message": "workout",
 	}).Info("decoded data")
 
-	logbook, err := NewLogbook(ws.config)
-	if err != nil {
-		log.WithError(err).Error("cannot create logbook")
-		return
-	}
-
-	if err := logbook.PublishWorkout(*decoded); err != nil {
-		log.WithError(err).WithField("workout", decoded).Error("cannot publish workout")
-	}
+	fmt.Println(decoded.AsJSON())
 }

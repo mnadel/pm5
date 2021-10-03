@@ -66,9 +66,8 @@ func (w *Watchdog) ScanMonitor() chan<- struct{} {
 			}
 
 			entry := log.WithFields(log.Fields{
-				"last_scan": lastScan().Format(ISO8601),
-				"prev":      prev,
-				"curr":      current,
+				"prev": prev,
+				"curr": current,
 			})
 
 			if current == prev {
