@@ -5,7 +5,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	flag "github.com/spf13/pflag"
 )
 
 const (
@@ -13,12 +13,6 @@ const (
 )
 
 type Configuration struct {
-	// LogFile is the path to our logfile
-	LogFile string
-	// ConfigFile is the path to the files we loaded.
-	ConfigFile string
-	// LogLevel is the logrus level.
-	LogLevel log.Level
 	// BleWatchdogDeadline is the max duration between scans we'll tolerate.
 	BleWatchdogDeadline time.Duration
 	// BleWatchdogDisconnect is the max duration after workout sumary is received before we expect a disconnect.
@@ -28,29 +22,18 @@ type Configuration struct {
 }
 
 func NewConfiguration() *Configuration {
-    viper.SetDefault("log_level", "info")
-    viper.SetDefault("log_file", "/var/log/pm5.log")
-    viper.SetDefault("ble_watchdog_deadline", "60s")
-    viper.SetDefault("ble_watchdog_workout_disconnect", "7m")
-    viper.SetDefault("ble_watchdog_workout_deadline", "45m")
+	logLevel := flag.String("loglevel", "info", "the logrus log level")
+	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
+	bleWatchdogDeadline := flag.Duration("scan", time.Second*60, "max duration between scans we'll tolerate")
+	bleWatchdogWorkoutDisconnect := flag.Duration("disconn", time.Minute*7, "max duration after workout sumary is received before we expect a disconnect")
+	bleWatchdogWorkoutDeadline := flag.Duration("scandeadline", time.Minute*45, "mmax duration after we connect to the PM5 before we expect to receive a workout summary")
 
-	viper.SetConfigName("pm5")
-	viper.SetConfigType("yml")
-	viper.AddConfigPath("/etc")
-	viper.AddConfigPath("$HOME/.config")
-	viper.AddConfigPath(".")
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("PM5")
+	flag.Parse()
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.WithError(err).Fatal("cannot load configuration")
-	}
-
-	logLevel, err := log.ParseLevel(viper.GetString("log_level"))
+	parsedLogLevel, err := log.ParseLevel(*logLevel)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"level": viper.GetString("log_level"),
+			"level": logLevel,
 		}).WithError(err).Fatal("cannot parse log level")
 	}
 
@@ -62,31 +45,29 @@ func NewConfiguration() *Configuration {
 
 	var logfileMode int
 
-	if info, err := os.Stat(viper.GetString("LOG_FILE")); os.IsNotExist(err) {
+	if info, err := os.Stat(*logFile); os.IsNotExist(err) {
 		logfileMode = os.O_APPEND
 	} else if err != nil {
-		log.WithError(err).WithField("file", viper.GetString("LOG_FILE")).Fatal("cannot stat logfile")
+		log.WithError(err).WithField("file", *logFile).Fatal("cannot stat logfile")
 	} else if info.Size() >= MAX_LOGFILE_SIZE {
 		logfileMode = os.O_TRUNC
 	} else {
 		logfileMode = os.O_APPEND
 	}
 
-	if f, err := os.OpenFile(viper.GetString("LOG_FILE"), os.O_WRONLY|os.O_CREATE|logfileMode, 0644); err != nil {
+	if f, err := os.OpenFile(*logFile, os.O_WRONLY|os.O_CREATE|logfileMode, 0644); err != nil {
 		panic(err.Error())
 	} else {
 		log.SetOutput(f)
 	}
 
-	log.SetLevel(logLevel)
-	log.SetReportCaller(logLevel == log.DebugLevel)
+	log.SetLevel(parsedLogLevel)
+	log.SetReportCaller(parsedLogLevel == log.DebugLevel)
 
 	config := &Configuration{
-		BleWatchdogDeadline:          viper.GetDuration("ble_watchdog_deadline"),
-		BleWatchdogWorkoutDisconnect: viper.GetDuration("ble_watchdog_workout_disconnect"),
-		BleWatchdogWorkoutDeadline:   viper.GetDuration("ble_watchdog_workout_deadline"),
-		ConfigFile:                   viper.ConfigFileUsed(),
-		LogLevel:                     logLevel,
+		BleWatchdogDeadline:          *bleWatchdogDeadline,
+		BleWatchdogWorkoutDisconnect: *bleWatchdogWorkoutDisconnect,
+		BleWatchdogWorkoutDeadline:   *bleWatchdogWorkoutDeadline,
 	}
 
 	cwd, _ := os.Getwd()
