@@ -28,6 +28,12 @@ type Configuration struct {
 }
 
 func NewConfiguration() *Configuration {
+    viper.SetDefault("log_level", "info")
+    viper.SetDefault("log_file", "/var/log/pm5.log")
+    viper.SetDefault("ble_watchdog_deadline", "60s")
+    viper.SetDefault("ble_watchdog_workout_disconnect", "7m")
+    viper.SetDefault("ble_watchdog_workout_deadline", "45m")
+
 	viper.SetConfigName("pm5")
 	viper.SetConfigType("yml")
 	viper.AddConfigPath("/etc")
