@@ -1,20 +1,24 @@
 package main
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 )
 
 // WorkoutSubscriber receives workout data (0x39 payloads) from the PM5 Rower.
 type WorkoutSubscriber struct {
-	config *Configuration
+	config   *Configuration
+	database *Database
 }
 
 func NewWorkoutSubscriber(config *Configuration) *WorkoutSubscriber {
 	return &WorkoutSubscriber{
-		config: config,
+		config:   config,
+		database: NewDatabase(config),
 	}
+}
+
+func (ws *WorkoutSubscriber) Close() {
+	ws.database.Close()
 }
 
 func (ws *WorkoutSubscriber) Notify(data []byte) {
@@ -26,17 +30,12 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 	watchdog := NewWatchdog(ws.config)
 	watchdog.StartWorkoutDisconnectMonitor()
 
-	raw := ReadWorkoutData(data)
 	log.WithFields(log.Fields{
-		"raw":     raw,
+		"data":    data,
 		"message": "workout",
-	}).Info("received data")
+	}).Info("received message")
 
-	decoded := raw.Decode()
-	log.WithFields(log.Fields{
-		"decoded": decoded,
-		"message": "workout",
-	}).Info("decoded data")
-
-	fmt.Println(decoded.AsJSON())
+	ws.database.SaveWorkout(&WorkoutDBRecord{
+		Data: data,
+	})
 }

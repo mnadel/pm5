@@ -26,6 +26,7 @@ type WorkoutType int
 
 // Raw Workout (0x39) bytes
 type RawWorkoutData struct {
+	Data              []byte
 	LogEntry          []byte
 	ElapsedTime       []byte
 	Distance          []byte
@@ -49,6 +50,7 @@ type WorkoutData struct {
 // ReadWorkoutData reads an array of bytes into a raw struct of Workout data.
 func ReadWorkoutData(data []byte) *RawWorkoutData {
 	return &RawWorkoutData{
+		Data:              data,
 		LogEntry:          data[0:4],
 		ElapsedTime:       data[4:7],
 		Distance:          data[7:10],

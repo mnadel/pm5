@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"strconv"
@@ -72,4 +73,11 @@ func Contains(haystack []string, needle string) bool {
 // Hash returns a string representation of a hash of the data.
 func Hash(data []byte) string {
 	return fmt.Sprintf("%x", md5.Sum(data))
+}
+
+// Itob encodes a uint64 into a byte array
+func Itob(v uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }

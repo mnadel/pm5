@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -13,6 +15,8 @@ const (
 )
 
 type Configuration struct {
+	// DBFile is the path to our database file
+	DBFile string
 	// BleWatchdogDeadline is the max duration between scans we'll tolerate.
 	BleWatchdogDeadline time.Duration
 	// BleWatchdogDisconnect is the max duration after workout sumary is received before we expect a disconnect.
@@ -21,9 +25,22 @@ type Configuration struct {
 	BleWatchdogWorkoutDeadline time.Duration
 }
 
+func NewTestConfiguration() *Configuration {
+	f, err := ioutil.TempFile(os.TempDir(), "gotest-")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return &Configuration{
+		DBFile: f.Name(),
+	}
+}
+
 func NewConfiguration() *Configuration {
+	initialize := flag.Bool("init", false, "initialize the given config (make directories, etc)")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
+	dbFile := flag.String("dbfile", "/var/run/pm5/pm5.boltdb", "path to db file")
 	bleWatchdogDeadline := flag.Duration("scan", time.Second*60, "max duration between scans we'll tolerate")
 	bleWatchdogWorkoutDisconnect := flag.Duration("disconn", time.Minute*7, "max duration after workout sumary is received before we expect a disconnect")
 	bleWatchdogWorkoutDeadline := flag.Duration("deadline", time.Minute*45, "max duration after we connect to the PM5 before we expect to receive a workout summary")
@@ -43,28 +60,34 @@ func NewConfiguration() *Configuration {
 		ForceQuote:    true,
 	})
 
-	var logfileMode int
-
-	if info, err := os.Stat(*logFile); os.IsNotExist(err) {
-		logfileMode = os.O_APPEND
-	} else if err != nil {
-		log.WithError(err).WithField("file", *logFile).Fatal("cannot stat logfile")
-	} else if info.Size() >= MAX_LOGFILE_SIZE {
-		logfileMode = os.O_TRUNC
+	if *logFile == "-" {
+		log.SetOutput(os.Stdout)
 	} else {
-		logfileMode = os.O_APPEND
-	}
-
-	if f, err := os.OpenFile(*logFile, os.O_WRONLY|os.O_CREATE|logfileMode, 0644); err != nil {
-		panic(err.Error())
-	} else {
-		log.SetOutput(f)
+		fsm := &FileSizeManager{}
+		if f, err := fsm.OpenFile(*logFile, MAX_LOGFILE_SIZE); err != nil {
+			panic(err.Error())
+		} else {
+			log.SetOutput(f)
+		}
 	}
 
 	log.SetLevel(parsedLogLevel)
 	log.SetReportCaller(parsedLogLevel == log.DebugLevel)
 
+	if *initialize {
+		logFileDirectory := filepath.Dir(*logFile)
+		log.WithField("dir", logFileDirectory).Info("ensuring directory")
+		os.MkdirAll(logFileDirectory, 0755)
+
+		dbFileDirectory := filepath.Dir(*dbFile)
+		log.WithField("dir", dbFileDirectory).Info("ensuring directory")
+		os.MkdirAll(dbFileDirectory, 0755)
+
+		os.Exit(0)
+	}
+
 	config := &Configuration{
+		DBFile:                       *dbFile,
 		BleWatchdogDeadline:          *bleWatchdogDeadline,
 		BleWatchdogWorkoutDisconnect: *bleWatchdogWorkoutDisconnect,
 		BleWatchdogWorkoutDeadline:   *bleWatchdogWorkoutDeadline,

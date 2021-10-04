@@ -42,6 +42,13 @@ func (c *Characterisic) MessageName() string {
 	return fmt.Sprintf("%x", c.Message)
 }
 
+func (d *PM5Device) Close() {
+	for _, v := range d.RowingCharacteristics {
+		log.WithField("sub", v.Name).Info("closing subscriber")
+		v.Subscriber.Close()
+	}
+}
+
 // IsPM5 returns true if the parameter represents a PM5 rowing machine.
 func (d *PM5Device) IsPM5(r bluetooth.ScanResult) bool {
 	return IsPM5(r.LocalName())
@@ -76,9 +83,9 @@ func (d *PM5Device) Register(c bluetooth.DeviceCharacteristic) {
 	}
 
 	log.WithFields(log.Fields{
-		"uuid":    c.UUID().String(),
-		"service": char.Name,
-		"char_id": char.MessageName(),
+		"uuid":           c.UUID().String(),
+		"service":        char.Name,
+		"characteristic": char.MessageName(),
 	}).Info("subscribing to messages")
 
 	c.EnableNotifications(func(buf []byte) {

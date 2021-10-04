@@ -8,6 +8,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
+	go.etcd.io/bbolt v1.3.6
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	tinygo.org/x/bluetooth v0.3.0
 )

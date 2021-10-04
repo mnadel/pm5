@@ -43,6 +43,11 @@ func (c *Central) Register(char *Characterisic) {
 	}
 }
 
+func (c *Central) Close() {
+	c.device.Close()
+	c.adapter.StopScan()
+}
+
 // Listen is a blocking call that scans for and connects to a PM5 Rower BLE Peripheral, and then awaits
 // Characteristic messages to be received and processes them.
 func (c *Central) Listen() {
