@@ -26,7 +26,7 @@ func NewConfiguration() *Configuration {
 	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
 	bleWatchdogDeadline := flag.Duration("scan", time.Second*60, "max duration between scans we'll tolerate")
 	bleWatchdogWorkoutDisconnect := flag.Duration("disconn", time.Minute*7, "max duration after workout sumary is received before we expect a disconnect")
-	bleWatchdogWorkoutDeadline := flag.Duration("scandeadline", time.Minute*45, "mmax duration after we connect to the PM5 before we expect to receive a workout summary")
+	bleWatchdogWorkoutDeadline := flag.Duration("deadline", time.Minute*45, "max duration after we connect to the PM5 before we expect to receive a workout summary")
 
 	flag.Parse()
 
