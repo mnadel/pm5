@@ -72,7 +72,7 @@ func NewConfiguration() *Configuration {
 		logfileMode = os.O_APPEND
 	}
 
-	if f, err := os.OpenFile(viper.GetString("LOG_FILE"), os.O_CREATE|logfileMode, 0644); err != nil {
+	if f, err := os.OpenFile(viper.GetString("LOG_FILE"), os.O_WRONLY|os.O_CREATE|logfileMode, 0644); err != nil {
 		panic(err.Error())
 	} else {
 		log.SetOutput(f)
