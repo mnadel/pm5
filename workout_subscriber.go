@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -35,7 +37,11 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 		"message": "workout",
 	}).Info("received message")
 
-	ws.database.SaveWorkout(&WorkoutDBRecord{
-		Data: data,
-	})
+	if err := ws.database.SaveWorkout(&WorkoutDBRecord{Data: data}); err != nil {
+		log.WithError(err).Error("error saving workout in db")
+	}
+
+	parsed := ReadWorkoutData(data)
+	decoded := parsed.Decode()
+	fmt.Println(decoded.AsJSON())
 }
