@@ -44,7 +44,10 @@ func (c *Central) Register(char *Characterisic) {
 }
 
 func (c *Central) Close() {
+	log.Info("stopping device")
 	c.device.Close()
+
+	log.Info("stopping scanning")
 	c.adapter.StopScan()
 }
 
