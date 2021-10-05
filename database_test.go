@@ -65,10 +65,23 @@ func TestDatabaseGetPendingRecords(t *testing.T) {
 	assert.Equal(t, uint64(4), pending[1].ID)
 }
 
-func MustInt(val int, err error) int {
-	if err != nil {
-		panic(err.Error())
+func TestDatabaseMarkSent(t *testing.T) {
+	db := NewDatabase(NewTestConfiguration())
+	c := MustInt(db.Count())
+	assert.Equal(t, 0, c)
+
+	for i := 0; i < 5; i++ {
+		wo := &WorkoutDBRecord{
+			Data: []byte{byte(i)},
+		}
+		db.SaveWorkout(wo)
+		db.MarkSent(wo.ID)
 	}
 
-	return val
+	c = MustInt(db.Count())
+	assert.Equal(t, 5, c)
+
+	pending, err := db.GetPendingWorkouts()
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(pending))
 }

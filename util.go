@@ -81,3 +81,12 @@ func Itob(v uint64) []byte {
 	binary.BigEndian.PutUint64(b, uint64(v))
 	return b
 }
+
+// MustInt takes an (int, error) and either panics or returns the int
+func MustInt(val int, err error) int {
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return val
+}
