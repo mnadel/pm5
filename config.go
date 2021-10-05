@@ -23,6 +23,8 @@ type Configuration struct {
 	BleWatchdogWorkoutDisconnect time.Duration
 	// BleWatchdogWorkoutDealine is the max duration after we connect to the PM5 before we expect to receive a workout summary.
 	BleWatchdogWorkoutDeadline time.Duration
+	// AdminConsolePort is the port to which we're attaching our web console
+	AdminConsolePort string
 }
 
 func NewTestConfiguration() *Configuration {
@@ -41,6 +43,7 @@ func NewConfiguration() *Configuration {
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
 	dbFile := flag.String("dbfile", "/var/run/pm5/pm5.boltdb", "path to db file")
+	port := flag.String("port", ":2112", "web console port")
 	bleWatchdogDeadline := flag.Duration("scan", time.Second*60, "max duration between scans we'll tolerate")
 	bleWatchdogWorkoutDisconnect := flag.Duration("disconn", time.Minute*7, "max duration after workout sumary is received before we expect a disconnect")
 	bleWatchdogWorkoutDeadline := flag.Duration("deadline", time.Minute*45, "max duration after we connect to the PM5 before we expect to receive a workout summary")
@@ -91,6 +94,7 @@ func NewConfiguration() *Configuration {
 		BleWatchdogDeadline:          *bleWatchdogDeadline,
 		BleWatchdogWorkoutDisconnect: *bleWatchdogWorkoutDisconnect,
 		BleWatchdogWorkoutDeadline:   *bleWatchdogWorkoutDeadline,
+		AdminConsolePort:             *port,
 	}
 
 	cwd, _ := os.Getwd()

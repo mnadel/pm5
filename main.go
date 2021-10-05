@@ -17,8 +17,9 @@ const (
 
 func main() {
 	config := NewConfiguration()
-	central := NewCentral(config)
+	SpawnAdminConsole(config)
 
+	central := NewCentral(config)
 	go signalHandler(central)
 
 	log.Info("starting central")
