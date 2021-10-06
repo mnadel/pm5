@@ -42,6 +42,16 @@ func (c *Characterisic) MessageName() string {
 	return fmt.Sprintf("%x", c.Message)
 }
 
+func (d *PM5Device) Stats() map[string]interface{} {
+	s := make(map[string]interface{})
+
+	for _, rc := range d.RowingCharacteristics {
+		s[rc.Name] = rc.Subscriber
+	}
+
+	return s
+}
+
 func (d *PM5Device) Close() {
 	for _, v := range d.RowingCharacteristics {
 		log.WithField("sub", v.Name).Info("closing subscriber")

@@ -17,10 +17,10 @@ const (
 
 func main() {
 	config := NewConfiguration()
-	SpawnAdminConsole(config)
-
 	central := NewCentral(config)
 	go signalHandler(central)
+
+	spawnAdminConsole(config, central)
 
 	log.Info("starting central")
 	central.Listen()

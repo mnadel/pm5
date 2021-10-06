@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/pprof"
@@ -18,11 +19,21 @@ func lastScan() time.Time {
 	return time.Unix(int64(val), 0)
 }
 
-func SpawnAdminConsole(config *Configuration) {
+func spawnAdminConsole(config *Configuration, central *Central) {
 	go func() {
 		r := mux.NewRouter()
 
 		r.Handle("/metrics", promhttp.Handler())
+
+		r.HandleFunc("/stats", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+			if j, err := json.Marshal(central.Stats()); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			} else {
+				fmt.Fprint(w, string(j))
+			}
+		})
 
 		r.HandleFunc("/ble/last-scan", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")

@@ -11,6 +11,7 @@ type Central struct {
 	device      *PM5Device
 	adapter     *bluetooth.Adapter
 	subscribers map[byte][]Subscriber
+	cancelCh    chan struct{}
 }
 
 func NewCentral(config *Configuration) *Central {
@@ -19,12 +20,13 @@ func NewCentral(config *Configuration) *Central {
 		device:      NewPM5Device(config),
 		adapter:     bluetooth.DefaultAdapter,
 		subscribers: make(map[byte][]Subscriber),
+		cancelCh:    make(chan struct{}, 1),
 	}
 
 	for _, characteristic := range central.device.RowingCharacteristics {
 		log.WithFields(log.Fields{
-			"service_name": characteristic.Name,
-			"char_id":      characteristic.MessageName(),
+			"service_name":   characteristic.Name,
+			"characteristic": characteristic.MessageName(),
 		}).Info("registering")
 
 		central.Register(characteristic)
@@ -43,12 +45,21 @@ func (c *Central) Register(char *Characterisic) {
 	}
 }
 
+func (c *Central) Stats() map[string]interface{} {
+	return map[string]interface{}{
+		"pm5": c.device.Stats(),
+	}
+}
+
 func (c *Central) Close() {
+	log.Info("sending central a cancel signal")
+	c.cancelCh <- struct{}{}
+
+	log.Info("stopping scanner")
+	c.adapter.StopScan()
+
 	log.Info("stopping device")
 	c.device.Close()
-
-	log.Info("stopping scanning")
-	c.adapter.StopScan()
 }
 
 // Listen is a blocking call that scans for and connects to a PM5 Rower BLE Peripheral, and then awaits
@@ -92,7 +103,13 @@ func (c *Central) Listen() {
 	}
 
 	// retrieve the result from the scan (i.e. the PM5 device)
-	result := <-scanResultCh
+	var result bluetooth.ScanResult
+	select {
+	case result = <-scanResultCh:
+	case <-c.cancelCh:
+		log.Info("central received exit signal")
+		return
+	}
 
 	// create a channel and callback for syncing on a disconnect event
 	// this doesn't seem to work (it's never called) on my RPi 3B+

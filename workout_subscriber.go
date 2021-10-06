@@ -23,6 +23,12 @@ func (ws *WorkoutSubscriber) Close() {
 	ws.database.Close()
 }
 
+func (ws *WorkoutSubscriber) Stats() map[string]interface{} {
+	return map[string]interface{}{
+		"db": ws.database.Stats(),
+	}
+}
+
 func (ws *WorkoutSubscriber) Notify(data []byte) {
 	// i abhor the time-based approach here, but the disconnect callback doesn't seem to get invoked,
 	// so a while after this "last" subscriber (argh, till we add more subscribers) we'll force a

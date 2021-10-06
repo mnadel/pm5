@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -31,6 +32,20 @@ func NewDatabase(c *Configuration) *Database {
 
 func (d *Database) Close() {
 	d.db.Close()
+}
+
+func (d *Database) Stats() map[string]interface{} {
+	b, err := json.Marshal(d.db.Stats())
+	if err != nil {
+		return nil
+	}
+
+	var stats map[string]interface{}
+	if err := json.Unmarshal(b, &stats); err != nil {
+		return nil
+	}
+
+	return stats
 }
 
 func (d *Database) MarkSent(id uint64) error {
