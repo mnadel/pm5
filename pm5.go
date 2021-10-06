@@ -46,7 +46,7 @@ func (d *PM5Device) Stats() map[string]interface{} {
 	s := make(map[string]interface{})
 
 	for _, rc := range d.RowingCharacteristics {
-		s[rc.Name] = rc.Subscriber
+		s[rc.Name] = rc.Subscriber.Stats()
 	}
 
 	return s

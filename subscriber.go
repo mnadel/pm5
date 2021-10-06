@@ -4,5 +4,5 @@ package main
 type Subscriber interface {
 	Notify([]byte)
 	Close()
-	Stats() map[string]interface{}
+	Stats() interface{}
 }

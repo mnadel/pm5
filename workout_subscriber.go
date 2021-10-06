@@ -23,7 +23,7 @@ func (ws *WorkoutSubscriber) Close() {
 	ws.database.Close()
 }
 
-func (ws *WorkoutSubscriber) Stats() map[string]interface{} {
+func (ws *WorkoutSubscriber) Stats() interface{} {
 	return map[string]interface{}{
 		"db": ws.database.Stats(),
 	}
