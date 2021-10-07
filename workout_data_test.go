@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -104,6 +105,17 @@ func TestMustParseDateTime(t *testing.T) {
 	assert.Equal(t, 5, dt.Day())
 	assert.Equal(t, 17, dt.Hour())
 	assert.Equal(t, 38, dt.Minute())
+}
+
+func TestAsJSON(t *testing.T) {
+	raw := ReadWorkoutData(testWorkoutData())
+	parsed := raw.Decode()
+	j := parsed.AsJSON()
+
+	var m map[string]interface{}
+	json.Unmarshal([]byte(j), &m)
+
+	assert.Equal(t, float64(460293), m["ElapsedTime"])
 }
 
 func MustParseDuration(formatted string) time.Duration {

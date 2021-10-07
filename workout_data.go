@@ -22,6 +22,11 @@ const (
 	WorkoutTypeNum                           = WorkoutType(13)
 )
 
+const (
+	ElapsedTimeFactor = 0.01
+	AvgPaceFactor     = 0.1
+)
+
 type WorkoutType int
 
 // Raw Workout (0x39) bytes
@@ -65,18 +70,27 @@ func ReadWorkoutData(data []byte) *RawWorkoutData {
 func (rd *RawWorkoutData) Decode() *WorkoutData {
 	return &WorkoutData{
 		LogEntry:          DecodeDateTime(rd.LogEntry),
-		ElapsedTime:       DecodeDuration(float32(DecodeThreeByteNumber(rd.ElapsedTime)), 0.01),
+		ElapsedTime:       DecodeDuration(float32(DecodeThreeByteNumber(rd.ElapsedTime)), ElapsedTimeFactor),
 		Distance:          float32(DecodeThreeByteNumber(rd.Distance)) * 0.1,
 		AverageStrokeRate: DecodeByteNumber(rd.AverageStrokeRate),
 		AvgDragFactor:     DecodeByteNumber(rd.AvgDragFactor),
 		WorkoutType:       WorkoutType(int(rd.WorkoutType)),
-		AvgPace:           DecodeDuration(float32(DecodeTwoByteNumber(rd.AvgPace)), 0.1),
+		AvgPace:           DecodeDuration(float32(DecodeTwoByteNumber(rd.AvgPace)), AvgPaceFactor),
 	}
 }
 
 func (wd *WorkoutData) AsJSON() string {
-	str, _ := json.Marshal(wd)
-	return string(str)
+	var m map[string]interface{}
+
+	b, _ := json.Marshal(wd)
+	json.Unmarshal(b, &m)
+
+	m["ElapsedTime"] = uint64(wd.ElapsedTime.Seconds() / ElapsedTimeFactor)
+	m["AvgPace"] = uint64(wd.ElapsedTime.Seconds() / AvgPaceFactor)
+
+	b, _ = json.Marshal(m)
+
+	return string(b)
 }
 
 /*

@@ -96,6 +96,7 @@ func (d *Database) SaveWorkout(w *WorkoutDBRecord) error {
 
 		// update record
 		w.ID = id
+		// w.CreatedAt = time.Now()
 
 		encoded, err := EncodeWorkoutRecord(w)
 		if err != nil {
@@ -194,8 +195,8 @@ func (d *Database) PrintDB() error {
 	for _, workout := range workouts {
 		raw := ReadWorkoutData(workout.Data)
 		decoded := raw.Decode()
-		fmt.Print(workout.ID, workout.SentAt.Format(ISO8601))
-		fmt.Print(decoded.AsJSON())
+		fmt.Println(workout.ID, workout.SentAt.Format(ISO8601))
+		fmt.Println(decoded.AsJSON())
 	}
 
 	return nil
