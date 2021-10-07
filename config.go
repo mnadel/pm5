@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -39,6 +40,7 @@ func NewTestConfiguration() *Configuration {
 }
 
 func NewConfiguration() *Configuration {
+	printDB := flag.Bool("dbdump", false, "print the contents of the database")
 	initialize := flag.Bool("init", false, "initialize the given config (make directories, etc)")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
@@ -104,6 +106,24 @@ func NewConfiguration() *Configuration {
 		"user":   os.Getenv("USER"),
 		"cwd":    cwd,
 	}).Info("loaded configuration")
+
+	if *printDB {
+		db := NewDatabase(config)
+		workouts, err := db.GetWorkouts()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(2)
+		}
+
+		for _, workout := range workouts {
+			raw := ReadWorkoutData(workout.Data)
+			decoded := raw.Decode()
+			fmt.Print(workout.ID, workout.SentAt.Format(ISO8601))
+			fmt.Print(decoded.AsJSON())
+		}
+
+		os.Exit(1)
+	}
 
 	return config
 }

@@ -153,6 +153,31 @@ func (d *Database) GetPendingWorkouts() ([]*WorkoutDBRecord, error) {
 	return data, err
 }
 
+func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
+	var data []*WorkoutDBRecord
+
+	err := d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("workouts"))
+		if b == nil {
+			return fmt.Errorf("cannot get workout bucket")
+		}
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			wo, err := DecodeWorkoutRecord(v)
+			if err != nil {
+				return err
+			}
+
+			data = append(data, wo)
+		}
+
+		return nil
+	})
+
+	return data, err
+}
+
 func (wr *WorkoutDBRecord) Decode() *RawWorkoutData {
 	return ReadWorkoutData(wr.Data)
 }
