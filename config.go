@@ -109,29 +109,12 @@ func NewConfiguration() *Configuration {
 
 	if *printDB {
 		db := NewDatabase(config)
-
-		count, err := db.Count()
-		if err != nil {
+		if err := db.PrintDB(); err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 
-		fmt.Println("found", count, "records")
-
-		workouts, err := db.GetWorkouts()
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-
-		for _, workout := range workouts {
-			raw := ReadWorkoutData(workout.Data)
-			decoded := raw.Decode()
-			fmt.Print(workout.ID, workout.SentAt.Format(ISO8601))
-			fmt.Print(decoded.AsJSON())
-		}
-
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	return config
