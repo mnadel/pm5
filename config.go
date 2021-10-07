@@ -109,10 +109,19 @@ func NewConfiguration() *Configuration {
 
 	if *printDB {
 		db := NewDatabase(config)
+
+		count, err := db.Count()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+
+		fmt.Println("found", count, "records")
+
 		workouts, err := db.GetWorkouts()
 		if err != nil {
 			fmt.Println(err.Error())
-			os.Exit(2)
+			os.Exit(1)
 		}
 
 		for _, workout := range workouts {

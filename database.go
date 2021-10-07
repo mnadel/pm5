@@ -178,6 +178,29 @@ func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
 	return data, err
 }
 
+func (d *Database) PrintDB() error {
+	count, err := d.Count()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("found", count, "records")
+
+	workouts, err := d.GetWorkouts()
+	if err != nil {
+		return err
+	}
+
+	for _, workout := range workouts {
+		raw := ReadWorkoutData(workout.Data)
+		decoded := raw.Decode()
+		fmt.Print(workout.ID, workout.SentAt.Format(ISO8601))
+		fmt.Print(decoded.AsJSON())
+	}
+
+	return nil
+}
+
 func (wr *WorkoutDBRecord) Decode() *RawWorkoutData {
 	return ReadWorkoutData(wr.Data)
 }
