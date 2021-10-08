@@ -23,7 +23,7 @@ type PM5Device struct {
 	RowingCharacteristics []*Characterisic
 }
 
-func NewPM5Device(config *Configuration) *PM5Device {
+func NewPM5Device(config *Configuration, database *Database) *PM5Device {
 	return &PM5Device{
 		RowingServiceUUID: MustParseUUID("ce060030-43e5-11e4-916c-0800200c9a66"),
 		RowingCharacteristics: []*Characterisic{
@@ -31,7 +31,7 @@ func NewPM5Device(config *Configuration) *PM5Device {
 				Name:       "workout",
 				Message:    0x39,
 				UUID:       MustParseUUID("ce060039-43e5-11e4-916c-0800200c9a66"),
-				Subscriber: NewWorkoutSubscriber(config),
+				Subscriber: NewWorkoutSubscriber(config, database),
 			},
 		},
 	}

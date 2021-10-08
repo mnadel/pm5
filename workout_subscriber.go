@@ -12,10 +12,10 @@ type WorkoutSubscriber struct {
 	database *Database
 }
 
-func NewWorkoutSubscriber(config *Configuration) *WorkoutSubscriber {
+func NewWorkoutSubscriber(config *Configuration, database *Database) *WorkoutSubscriber {
 	return &WorkoutSubscriber{
 		config:   config,
-		database: NewDatabase(config),
+		database: database,
 	}
 }
 

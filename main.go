@@ -17,15 +17,22 @@ const (
 
 func main() {
 	config := NewConfiguration()
-	central := NewCentral(config)
-	go signalHandler(central)
+	database := NewDatabase(config)
+	central := NewCentral(config, database)
+	logbook := NewLogbook(database, NewClient())
 
-	spawnAdminConsole(config, central)
+	go signalHandler(central)
+	go AdminConsole(config, central)
+
+	syncer := NewSyncer(logbook, database)
+	syncer.Start()
 
 	log.Info("starting central")
 	central.Listen()
 
 	log.Info("central exiting")
+
+	syncer.Close()
 }
 
 func signalHandler(central *Central) {

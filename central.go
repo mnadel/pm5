@@ -14,10 +14,10 @@ type Central struct {
 	cancelCh    chan struct{}
 }
 
-func NewCentral(config *Configuration) *Central {
+func NewCentral(config *Configuration, database *Database) *Central {
 	central := &Central{
 		config:      config,
-		device:      NewPM5Device(config),
+		device:      NewPM5Device(config, database),
 		adapter:     bluetooth.DefaultAdapter,
 		subscribers: make(map[byte][]Subscriber),
 		cancelCh:    make(chan struct{}, 1),
