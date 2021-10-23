@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -40,6 +41,8 @@ func NewTestConfiguration() *Configuration {
 }
 
 func NewConfiguration() *Configuration {
+	auth := flag.Bool("auth", false, "print the auth url")
+	token := flag.String("token", "", "set the auth token in the form of id:secret")
 	printDB := flag.Bool("dbdump", false, "print the contents of the database")
 	initialize := flag.Bool("init", false, "initialize the given config (make directories, etc)")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
@@ -51,6 +54,13 @@ func NewConfiguration() *Configuration {
 	bleWatchdogWorkoutDeadline := flag.Duration("deadline", time.Minute*45, "max duration after we connect to the PM5 before we expect to receive a workout summary")
 
 	flag.Parse()
+
+	if *auth {
+		uri := "https://log.concept2.com/oauth/authorize?client_id=%s&scope=results:write&response_type=code&redirect_uri=%s"
+		url := fmt.Sprintf(uri, "ymMRExBCsS6HqDm9ShMEPRvpR3Hh2DPb3FTtiazX", "https://auth.pm5-book.workers.dev/c2")
+		fmt.Println("please visit: ", url)
+		os.Exit(0)
+	}
 
 	parsedLogLevel, err := log.ParseLevel(*logLevel)
 	if err != nil {
@@ -110,10 +120,25 @@ func NewConfiguration() *Configuration {
 	if *printDB {
 		db := NewDatabase(config)
 		if err := db.PrintDB(); err != nil {
-			fmt.Println(err.Error())
+			log.WithError(err).Fatal("unable to print database")
 			os.Exit(1)
 		}
 
+		os.Exit(0)
+	}
+
+	if *token != "" {
+		splitted := strings.Split(*token, ":")
+		if len(splitted) != 2 {
+			log.WithField("split", splitted).Fatal("unable to parse tokens")
+		}
+
+		db := NewDatabase(config)
+		if err := db.SetAuth(splitted[0], splitted[1]); err != nil {
+			log.WithError(err).Fatal("unable to save tokens")
+		}
+
+		fmt.Println("set tokens")
 		os.Exit(0)
 	}
 

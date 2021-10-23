@@ -20,6 +20,11 @@ type WorkoutDBRecord struct {
 	SentAt time.Time
 }
 
+type AuthRecord struct {
+	Token   string
+	Refresh string
+}
+
 func NewDatabase(c *Configuration) *Database {
 	db, err := bolt.Open(c.DBFile, 0644, nil)
 	if err != nil {
@@ -35,6 +40,53 @@ func (d *Database) Close() {
 
 func (d *Database) Stats() bolt.Stats {
 	return d.db.Stats()
+}
+
+func (d *Database) SetAuth(token, refresh string) error {
+	return d.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("auth"))
+		if err != nil {
+			return err
+		}
+
+		if err := b.Put([]byte("token"), []byte(token)); err != nil {
+			return err
+		}
+
+		if err := b.Put([]byte("refresh"), []byte(refresh)); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (d *Database) GetAuth() (*AuthRecord, error) {
+	var rec AuthRecord
+
+	err := d.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("auth"))
+		if b == nil {
+			return fmt.Errorf("auth bucket not found")
+		}
+
+		tokBytes := b.Get([]byte("token"))
+		if tokBytes == nil {
+			return fmt.Errorf("cannot find token key")
+		}
+
+		refreshBytes := b.Get([]byte("refresh"))
+		if tokBytes == nil {
+			return fmt.Errorf("cannot find refresh key")
+		}
+
+		rec.Token = string(tokBytes)
+		rec.Refresh = string(refreshBytes)
+
+		return nil
+	})
+
+	return &rec, err
 }
 
 func (d *Database) MarkSent(id uint64) error {
@@ -128,7 +180,7 @@ func (d *Database) Count() (int, error) {
 }
 
 func (d *Database) GetPendingWorkouts() ([]*WorkoutDBRecord, error) {
-	var data []*WorkoutDBRecord
+	data := make([]*WorkoutDBRecord, 0)
 
 	err := d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("workouts"))
@@ -155,7 +207,7 @@ func (d *Database) GetPendingWorkouts() ([]*WorkoutDBRecord, error) {
 }
 
 func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
-	var data []*WorkoutDBRecord
+	data := make([]*WorkoutDBRecord, 0)
 
 	err := d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("workouts"))
@@ -180,6 +232,14 @@ func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
 }
 
 func (d *Database) PrintDB() error {
+	auth, err := d.GetAuth()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("auth", auth.Token)
+	fmt.Println("refresh", auth.Refresh)
+
 	count, err := d.Count()
 	if err != nil {
 		return err

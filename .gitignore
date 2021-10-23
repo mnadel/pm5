@@ -1,2 +1,3 @@
 /pm5
-pm5.db
+*.db
+*.log
