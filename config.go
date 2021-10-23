@@ -17,6 +17,8 @@ const (
 )
 
 type Configuration struct {
+	// LogbookHost is the DNS host of the Logbook service
+	LogbookHost string
 	// DBFile is the path to our database file
 	DBFile string
 	// BleWatchdogDeadline is the max duration between scans we'll tolerate.
@@ -42,6 +44,8 @@ func NewTestConfiguration() *Configuration {
 
 func NewConfiguration() *Configuration {
 	auth := flag.Bool("auth", false, "print the auth url")
+	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
+	refresh := flag.Bool("refresh", false, "get a new refresh token")
 	token := flag.String("token", "", "set the auth token in the form of id:secret")
 	printDB := flag.Bool("dbdump", false, "print the contents of the database")
 	initialize := flag.Bool("init", false, "initialize the given config (make directories, etc)")
@@ -102,6 +106,7 @@ func NewConfiguration() *Configuration {
 	}
 
 	config := &Configuration{
+		LogbookHost:                  *host,
 		DBFile:                       *dbFile,
 		BleWatchdogDeadline:          *bleWatchdogDeadline,
 		BleWatchdogWorkoutDisconnect: *bleWatchdogWorkoutDisconnect,
@@ -127,6 +132,24 @@ func NewConfiguration() *Configuration {
 		os.Exit(0)
 	}
 
+	if *refresh {
+		db := NewDatabase(config)
+		client := NewClient()
+		lb := NewLogbook(config, db, client)
+
+		auth, err := lb.Refresh()
+		if err != nil {
+			log.WithError(err).Fatal("cannot refresh")
+		}
+
+		if err := db.SetAuth(auth.Refresh, auth.Refresh); err != nil {
+			log.WithField("auth", auth).WithError(err).Fatal("cannot save refresh token")
+		}
+
+		log.WithField("auth", auth).Info("saved new tokens")
+		os.Exit(0)
+	}
+
 	if *token != "" {
 		splitted := strings.Split(*token, ":")
 		if len(splitted) != 2 {
@@ -138,7 +161,7 @@ func NewConfiguration() *Configuration {
 			log.WithError(err).Fatal("unable to save tokens")
 		}
 
-		fmt.Println("set tokens")
+		log.Info("saved tokens")
 		os.Exit(0)
 	}
 

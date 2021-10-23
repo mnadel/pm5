@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -21,8 +23,36 @@ func NewClient() *Client {
 	}
 }
 
+func (c *Client) PostForm(uri string, data url.Values) (map[string]interface{}, error) {
+	req, _ := http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		return nil, fmt.Errorf(res.Status)
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string]interface{}
+	if err := json.Unmarshal(body, &m); err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
 func (c *Client) Post(uri, body string, headers map[string]string) error {
-	req, err := http.NewRequest("POST", uri, strings.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
 	if err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ func main() {
 	config := NewConfiguration()
 	database := NewDatabase(config)
 	central := NewCentral(config, database)
-	logbook := NewLogbook(database, NewClient())
+	logbook := NewLogbook(config, database, NewClient())
 
 	go signalHandler(central)
 	go AdminConsole(config, central)
