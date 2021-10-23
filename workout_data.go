@@ -93,6 +93,36 @@ func (wd *WorkoutData) AsJSON() string {
 	return string(b)
 }
 
+func (wt WorkoutType) AsString() string {
+	var t string
+
+	switch wt {
+	case WorkoutTypeJustRowNoSplits:
+	case WorkoutTypeJustRowSplits:
+		t = "JustRow"
+	case WorkoutTypeFixedDistSplits:
+		t = "FixedDistanceSplits"
+	case WorkoutTypeFixedDistInterval:
+		t = "FixedDistanceInterval"
+	case WorkoutTypeFixedTimeSplits:
+		t = "FixedTimeSplits"
+	case WorkoutTypeFixedTimeInterval:
+	case WorkoutTypeFixedTimeNoSplits:
+		t = "FixedTimeInterval"
+	case WorkoutTypeFixedCalsInterval:
+	case WorkoutTypeFixedCalorie:
+		t = "FixedCalorie"
+	case WorkoutTypeVariableInterval:
+		t = "VariableInterval"
+	case WorkoutTypeVariableUndefinedRestInterval:
+		t = "VariableIntervalUndefinedRest"
+	default:
+		t = "unknown"
+	}
+
+	return t
+}
+
 /*
 	1, // Log Entry Date Lo, -- 0
 	2, // Log Entry Date Hi, -- 1

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
@@ -31,7 +32,23 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 		return err
 	}
 
-	return l.client.Post("", wo.AsJSON(), headers)
+	m := map[string]interface{}{
+		"type":         "rower",
+		"date":         wo.LogEntry.Format(ISO8601),
+		"distance":     uint64(wo.Distance),
+		"time":         uint64(wo.ElapsedTime.Seconds() * 10),
+		"weight_class": "H",
+		"workout_type": wo.WorkoutType.AsString(),
+		"stroke_rate":  wo.AverageStrokeRate,
+		"drag_factor":  wo.AvgDragFactor,
+		"pace":         uint64(wo.AvgPace.Seconds() * 10),
+	}
+
+	payload, _ := json.Marshal(m)
+
+	uri := fmt.Sprintf("https://%s/api/users/me/results", l.config.LogbookHost)
+
+	return l.client.Post(uri, string(payload), headers)
 }
 
 func (l *Logbook) Refresh() (*AuthRecord, error) {
@@ -79,30 +96,12 @@ func (l *Logbook) Refresh() (*AuthRecord, error) {
 func (l *Logbook) newHeaders() (map[string]string, error) {
 	headers := make(map[string]string)
 
-	tok, err := l.bearerToken()
+	auth, err := l.db.GetAuth()
 	if err != nil {
 		return nil, err
 	}
 
-	headers["Authorization"] = fmt.Sprintf("Bearer %s", tok)
+	headers["Authorization"] = fmt.Sprintf("Bearer %s", auth.Token)
 
 	return headers, nil
-}
-
-func (l *Logbook) bearerToken() (string, error) {
-	headers, err := l.newHeaders()
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := l.client.GetJSON("", headers)
-	if err != nil {
-		return "", err
-	}
-
-	if v, ok := resp["access_token"]; ok {
-		return v.(string), nil
-	} else {
-		return "", fmt.Errorf("cannot find access_token")
-	}
 }
