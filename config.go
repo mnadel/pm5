@@ -142,7 +142,7 @@ func NewConfiguration() *Configuration {
 			log.WithError(err).Fatal("cannot refresh")
 		}
 
-		if err := db.SetAuth(auth.Refresh, auth.Refresh); err != nil {
+		if err := db.SetAuth(auth.Token, auth.Refresh); err != nil {
 			log.WithField("auth", auth).WithError(err).Fatal("cannot save refresh token")
 		}
 

@@ -74,13 +74,12 @@ func (d *Database) GetAuth() (*AuthRecord, error) {
 		if tokBytes == nil {
 			return fmt.Errorf("cannot find token key")
 		}
+		rec.Token = string(tokBytes)
 
 		refreshBytes := b.Get([]byte("refresh"))
-		if tokBytes == nil {
+		if refreshBytes == nil {
 			return fmt.Errorf("cannot find refresh key")
 		}
-
-		rec.Token = string(tokBytes)
 		rec.Refresh = string(refreshBytes)
 
 		return nil
@@ -237,7 +236,7 @@ func (d *Database) PrintDB() error {
 		return err
 	}
 
-	fmt.Println("auth", auth.Token)
+	fmt.Println("   auth", auth.Token)
 	fmt.Println("refresh", auth.Refresh)
 
 	count, err := d.Count()
