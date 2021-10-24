@@ -27,9 +27,14 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 		return err
 	}
 
-	headers, err := l.newHeaders()
+	auth, err := l.authToken()
 	if err != nil {
 		return err
+	}
+
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", auth),
+		"Content-Type":  "application/json",
 	}
 
 	m := map[string]interface{}{
@@ -93,15 +98,11 @@ func (l *Logbook) Refresh() (*AuthRecord, error) {
 	}, nil
 }
 
-func (l *Logbook) newHeaders() (map[string]string, error) {
-	headers := make(map[string]string)
-
+func (l *Logbook) authToken() (string, error) {
 	auth, err := l.db.GetAuth()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	headers["Authorization"] = fmt.Sprintf("Bearer %s", auth.Token)
-
-	return headers, nil
+	return auth.Token, nil
 }
