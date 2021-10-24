@@ -49,4 +49,4 @@ After navigating to the link shown and authorizing this application, you'll be s
 
 And with that, PM5 Book will have everything it needs to update Logbook on your behalf!
 
-Note that the refresh token is valid for a year, so you might eventually need to run through the above auth flow again at some point.
+Note that the refresh token is valid for a year. With each sync we'll try obtaining a new refresh token, so you shouldn't have to re-authenticate unless you haven't used PM5-Book in over a year. If your auth tokens do expire, you cat visit `pm5 --authurl` to get new tokens and re-invoke `pm5 --auth`.

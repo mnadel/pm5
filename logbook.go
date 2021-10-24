@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Logbook struct {
 	db     *Database
 	client *Client
 	config *Configuration
+	auth   *AuthRecord
 }
 
 func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
@@ -22,18 +25,25 @@ func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
 }
 
 func (l *Logbook) PostWorkout(wo *WorkoutData) error {
-	_, err := l.db.GetAuth()
-	if err != nil {
-		return err
-	}
+	if l.auth == nil {
+		auth, err := l.db.GetAuth()
+		if err != nil {
+			return err
+		}
 
-	auth, err := l.authToken()
-	if err != nil {
-		return err
+		l.auth = auth
+
+		if newAuth, err := RefreshAuth(l.config, l.client, auth); err != nil {
+			if err := l.db.SetAuth(newAuth.Token, newAuth.Refresh); err != nil {
+				log.WithError(err).Info("unable to save new tokens")
+			}
+		} else {
+			log.WithError(err).Info("unable to get new tokens")
+		}
 	}
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", auth),
+		"Authorization": fmt.Sprintf("Bearer %s", l.auth.Token),
 		"Content-Type":  "application/json",
 	}
 
@@ -56,26 +66,21 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 	return l.client.Post(uri, string(payload), headers)
 }
 
-func (l *Logbook) Refresh() (*AuthRecord, error) {
+func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord) (*AuthRecord, error) {
 	if os.Getenv("PM5_CLIENT_SECRET") == "" {
 		return nil, fmt.Errorf("missing: PM5_CLIENT_SECRET")
 	}
 
-	auth, err := l.db.GetAuth()
-	if err != nil {
-		return nil, err
-	}
-
-	uri := fmt.Sprintf("https://%s/oauth/access_token", l.config.LogbookHost)
+	uri := fmt.Sprintf("https://%s/oauth/access_token", config.LogbookHost)
 
 	data := url.Values{}
 	data.Set("client_id", "ymMRExBCsS6HqDm9ShMEPRvpR3Hh2DPb3FTtiazX")
 	data.Set("client_secret", os.Getenv("PM5_CLIENT_SECRET"))
 	data.Set("grant_type", "refresh_token")
 	data.Set("scope", "results:write")
-	data.Set("refresh_token", auth.Refresh)
+	data.Set("refresh_token", currentAuth.Refresh)
 
-	resp, err := l.client.PostForm(uri, data)
+	resp, err := client.PostForm(uri, data)
 	if err != nil {
 		return nil, err
 	}
@@ -96,13 +101,4 @@ func (l *Logbook) Refresh() (*AuthRecord, error) {
 		Token:   resp["access_token"].(string),
 		Refresh: resp["refresh_token"].(string),
 	}, nil
-}
-
-func (l *Logbook) authToken() (string, error) {
-	auth, err := l.db.GetAuth()
-	if err != nil {
-		return "", err
-	}
-
-	return auth.Token, nil
 }

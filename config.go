@@ -136,16 +136,16 @@ func NewConfiguration() *Configuration {
 		}
 
 		os.Exit(0)
-	}
-
-	if *refresh {
+	} else if *refresh {
 		db := NewDatabase(config)
-		client := NewClient()
-		lb := NewLogbook(config, db, client)
-
-		auth, err := lb.Refresh()
+		auth, err := db.GetAuth()
 		if err != nil {
-			log.WithError(err).Fatal("cannot refresh")
+			log.WithError(err).Fatal("cannot get current auth")
+		}
+
+		auth, err = RefreshAuth(config, NewClient(), auth)
+		if err != nil {
+			log.WithError(err).Fatal("error refreshing tokens")
 		}
 
 		if err := db.SetAuth(auth.Token, auth.Refresh); err != nil {
@@ -155,9 +155,7 @@ func NewConfiguration() *Configuration {
 		log.WithField("auth", auth).Info("saved new tokens")
 
 		os.Exit(0)
-	}
-
-	if *auth != "" {
+	} else if *auth != "" {
 		splitted := strings.Split(*auth, ":")
 		if len(splitted) != 2 {
 			log.WithField("split", splitted).Fatal("unable to parse tokens")
