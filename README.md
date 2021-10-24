@@ -49,4 +49,4 @@ After navigating to the link shown and authorizing this application, you'll be s
 
 And with that, PM5 Book will have everything it needs to update Logbook on your behalf!
 
-Note that the refresh token is valid for a year, so you'll eventually need to run through the above auth flow again.
+Note that the refresh token is valid for a year, so you might eventually need to run through the above auth flow again at some point.
