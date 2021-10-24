@@ -53,7 +53,7 @@ func NewConfiguration() *Configuration {
 	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
 	auth := flag.String("auth", "", "set the auth token in the form of id:secret")
 	dbFile := flag.String("dbfile", "/var/run/pm5/pm5.boltdb", "path to db file")
-	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
+	logFile := flag.String("logfile", "-", "path to logfile")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	port := flag.String("port", ":2112", "web console port")
 
@@ -90,7 +90,7 @@ func NewConfiguration() *Configuration {
 	} else {
 		fsm := &FileSizeManager{}
 		if f, err := fsm.OpenFile(*logFile, MAX_LOGFILE_SIZE); err != nil {
-			panic(err.Error())
+			log.WithError(err).Fatal("cannot open logfile")
 		} else {
 			log.SetOutput(f)
 		}
