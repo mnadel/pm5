@@ -38,13 +38,13 @@ Its source is available at https://github.com/mnadel/pm5-auth.
 First, generate a link to authenticate PM5 Book:
 
 ```
-> ./pm5 --auth
+> pm5 --authurl
 ```
 
 After navigating to the link shown and authorizing this application, you'll be shown a command to run. It'll look something like this:
 
 ```
-> pm5 --token xxxyyy:abc123
+> pm5 --auth xxxyyy:abc123
 ```
 
 And with that, PM5 Book will have everything it needs to update Logbook on your behalf!

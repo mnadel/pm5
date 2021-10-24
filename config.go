@@ -13,7 +13,9 @@ import (
 )
 
 const (
-	MAX_LOGFILE_SIZE = 5*2 ^ 20 // 5MB
+	MAX_LOGFILE_SIZE   = 5*2 ^ 20 // 5MB
+	PM5_OAUTH_APPID    = "ymMRExBCsS6HqDm9ShMEPRvpR3Hh2DPb3FTtiazX"
+	PM5_OAUTH_CALLBACK = "https://auth.pm5-book.workers.dev/c2"
 )
 
 type Configuration struct {
@@ -43,26 +45,30 @@ func NewTestConfiguration() *Configuration {
 }
 
 func NewConfiguration() *Configuration {
-	auth := flag.Bool("auth", false, "print the auth url")
-	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
-	refresh := flag.Bool("refresh", false, "get a new refresh token")
-	token := flag.String("token", "", "set the auth token in the form of id:secret")
-	printDB := flag.Bool("dbdump", false, "print the contents of the database")
 	initialize := flag.Bool("init", false, "initialize the given config (make directories, etc)")
-	logLevel := flag.String("loglevel", "info", "the logrus log level")
-	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
+	printDB := flag.Bool("dbdump", false, "print the contents of the database")
+	refresh := flag.Bool("refresh", false, "get a new refresh token")
+	authURL := flag.Bool("authurl", false, "print the auth url")
+
+	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
+	auth := flag.String("auth", "", "set the auth token in the form of id:secret")
 	dbFile := flag.String("dbfile", "/var/run/pm5/pm5.boltdb", "path to db file")
+	logFile := flag.String("logfile", "/var/log/pm5.log", "path to logfile")
+	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	port := flag.String("port", ":2112", "web console port")
-	bleWatchdogDeadline := flag.Duration("scan", time.Second*60, "max duration between scans we'll tolerate")
+
+	bleWatchdogWorkoutDeadline := flag.Duration("deadline", time.Minute*35, "max duration after we connect to the PM5 before we expect to receive a workout summary")
 	bleWatchdogWorkoutDisconnect := flag.Duration("disconn", time.Minute*7, "max duration after workout sumary is received before we expect a disconnect")
-	bleWatchdogWorkoutDeadline := flag.Duration("deadline", time.Minute*45, "max duration after we connect to the PM5 before we expect to receive a workout summary")
+	bleWatchdogDeadline := flag.Duration("scan", time.Second*60, "max duration between scans we'll tolerate")
 
 	flag.Parse()
 
-	if *auth {
-		uri := "https://log.concept2.com/oauth/authorize?client_id=%s&scope=results:write&response_type=code&redirect_uri=%s"
-		url := fmt.Sprintf(uri, "ymMRExBCsS6HqDm9ShMEPRvpR3Hh2DPb3FTtiazX", "https://auth.pm5-book.workers.dev/c2")
-		fmt.Println("please visit: ", url)
+	if *authURL {
+		uriFmt := "https://%s/oauth/authorize?client_id=%s&scope=results:write&response_type=code&redirect_uri=%s"
+		uri := fmt.Sprintf(uriFmt, *host, PM5_OAUTH_APPID, PM5_OAUTH_CALLBACK)
+		fmt.Println("please visit the below url")
+		fmt.Println(uri)
+
 		os.Exit(0)
 	}
 
@@ -147,11 +153,12 @@ func NewConfiguration() *Configuration {
 		}
 
 		log.WithField("auth", auth).Info("saved new tokens")
+
 		os.Exit(0)
 	}
 
-	if *token != "" {
-		splitted := strings.Split(*token, ":")
+	if *auth != "" {
+		splitted := strings.Split(*auth, ":")
 		if len(splitted) != 2 {
 			log.WithField("split", splitted).Fatal("unable to parse tokens")
 		}
@@ -162,6 +169,7 @@ func NewConfiguration() *Configuration {
 		}
 
 		log.Info("saved tokens")
+
 		os.Exit(0)
 	}
 
