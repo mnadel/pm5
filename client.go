@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Client struct {
@@ -34,6 +36,16 @@ func (c *Client) PostForm(uri string, data url.Values) (map[string]interface{}, 
 	}
 
 	if res.StatusCode < 200 || res.StatusCode > 299 {
+		defer res.Body.Close()
+		if body, err := ioutil.ReadAll(res.Body); err != nil {
+			log.WithError(err).WithField("status", res.Status).Error("error posting form")
+		} else {
+			log.WithFields(log.Fields{
+				"uri":    uri,
+				"status": res.Status,
+				"body":   string(body),
+			}).Error("error posting form")
+		}
 		return nil, fmt.Errorf(res.Status)
 	}
 
@@ -67,6 +79,16 @@ func (c *Client) Post(uri, body string, headers map[string]string) error {
 	}
 
 	if res.StatusCode < 200 || res.StatusCode > 299 {
+		defer res.Body.Close()
+		if body, err := ioutil.ReadAll(res.Body); err != nil {
+			log.WithError(err).WithField("status", res.Status).Error("error posting")
+		} else {
+			log.WithFields(log.Fields{
+				"uri":    uri,
+				"status": res.Status,
+				"body":   string(body),
+			}).Error("error posting")
+		}
 		return fmt.Errorf(res.Status)
 	}
 
@@ -88,14 +110,20 @@ func (c *Client) GetJSON(uri string, headers map[string]string) (map[string]inte
 		return nil, err
 	}
 
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return nil, fmt.Errorf(res.Status)
-	}
-
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		log.WithFields(log.Fields{
+			"uri":    uri,
+			"status": res.Status,
+			"body":   string(body),
+		}).Error("error getting json")
+
+		return nil, fmt.Errorf(res.Status)
 	}
 
 	var m map[string]interface{}
