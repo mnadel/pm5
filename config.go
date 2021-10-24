@@ -90,7 +90,7 @@ func NewConfiguration() *Configuration {
 	} else {
 		fsm := &FileSizeManager{}
 		if f, err := fsm.OpenFile(*logFile, MAX_LOGFILE_SIZE); err != nil {
-			log.WithError(err).Fatal("cannot open logfile")
+			log.WithError(err).WithField("file", *logFile).Fatal("cannot open logfile")
 		} else {
 			log.SetOutput(f)
 		}
