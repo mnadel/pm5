@@ -26,19 +26,11 @@ func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
 
 func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 	if l.auth == nil {
-		auth, err := l.db.GetAuth()
-		if err != nil {
+		if auth, err := l.db.GetAuth(); err != nil {
 			return err
-		}
-
-		l.auth = auth
-
-		if newAuth, err := RefreshAuth(l.config, l.client, auth); err != nil {
-			if err := l.db.SetAuth(newAuth.Token, newAuth.Refresh); err != nil {
-				log.WithError(err).Info("unable to save new tokens")
-			}
 		} else {
-			log.WithError(err).Info("unable to get new tokens")
+			l.auth = auth
+			go l.tryGetNewRefreshToken(auth)
 		}
 	}
 
@@ -64,6 +56,18 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 	uri := fmt.Sprintf("https://%s/api/users/me/results", l.config.LogbookHost)
 
 	return l.client.Post(uri, string(payload), headers)
+}
+
+func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) {
+	log.Info("attempting to get new refresh token")
+
+	if newAuth, err := RefreshAuth(l.config, l.client, currentAuth); err != nil {
+		if err := l.db.SetAuth(newAuth.Token, newAuth.Refresh); err != nil {
+			log.WithError(err).Info("unable to save new tokens")
+		}
+	} else {
+		log.WithError(err).Info("unable to get new tokens")
+	}
 }
 
 func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord) (*AuthRecord, error) {

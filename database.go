@@ -70,17 +70,17 @@ func (d *Database) GetAuth() (*AuthRecord, error) {
 			return fmt.Errorf("auth bucket not found")
 		}
 
-		tokBytes := b.Get([]byte("token"))
-		if tokBytes == nil {
-			return fmt.Errorf("cannot find token key")
+		if tokBytes := b.Get([]byte("token")); tokBytes == nil {
+			return fmt.Errorf("cannot find key=token")
+		} else {
+			rec.Token = string(tokBytes)
 		}
-		rec.Token = string(tokBytes)
 
-		refreshBytes := b.Get([]byte("refresh"))
-		if refreshBytes == nil {
-			return fmt.Errorf("cannot find refresh key")
+		if refreshBytes := b.Get([]byte("refresh")); refreshBytes == nil {
+			return fmt.Errorf("cannot find key=refresh")
+		} else {
+			rec.Refresh = string(refreshBytes)
 		}
-		rec.Refresh = string(refreshBytes)
 
 		return nil
 	})
@@ -147,7 +147,6 @@ func (d *Database) SaveWorkout(w *WorkoutDBRecord) error {
 
 		// update record
 		w.ID = id
-		// w.CreatedAt = time.Now()
 
 		encoded, err := EncodeWorkoutRecord(w)
 		if err != nil {
