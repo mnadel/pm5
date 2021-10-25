@@ -1,3 +1,5 @@
+/db
 /pm5
 *.db
 *.log
+*.boltdb

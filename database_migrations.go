@@ -29,7 +29,7 @@ func (dbm *DBMigrator) Migrate() error {
 			log.WithField("id", record.ID).Info("saving migrations")
 
 			if err := dbm.db.UpdateWorkout(record); err != nil {
-				log.WithError(err).WithField("id", record.ID).Error("cannot migrating")
+				log.WithError(err).WithField("id", record.ID).Error("cannot save migrations")
 				return err
 			}
 		} else {
