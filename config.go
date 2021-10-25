@@ -36,7 +36,7 @@ type Configuration struct {
 func NewTestConfiguration() *Configuration {
 	f, err := ioutil.TempFile(os.TempDir(), "gotest-")
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	return &Configuration{
@@ -53,7 +53,7 @@ func NewConfiguration() *Configuration {
 	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
 	auth := flag.String("auth", "", "set the auth token in the form of id:secret")
 	dbFile := flag.String("dbfile", "/var/run/pm5/pm5.boltdb", "path to db file")
-	logFile := flag.String("logfile", "-", "path to logfile")
+	logFile := flag.String("logfile", "-", "path to logfile, - for stdout")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	port := flag.String("port", ":2112", "web console port")
 
@@ -64,50 +64,14 @@ func NewConfiguration() *Configuration {
 	flag.Parse()
 
 	if *authURL {
-		uriFmt := "https://%s/oauth/authorize?client_id=%s&scope=results:write&response_type=code&redirect_uri=%s"
-		uri := fmt.Sprintf(uriFmt, *host, PM5_OAUTH_APPID, PM5_OAUTH_CALLBACK)
-		fmt.Println("please visit the below url")
-		fmt.Println(uri)
-
+		printAuthURL(*host)
 		os.Exit(0)
 	}
 
-	parsedLogLevel, err := log.ParseLevel(*logLevel)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"level": logLevel,
-		}).WithError(err).Fatal("cannot parse log level")
-	}
-
-	log.SetFormatter(&log.TextFormatter{
-		DisableColors: true,
-		FullTimestamp: true,
-		ForceQuote:    true,
-	})
-
-	if *logFile == "-" {
-		log.SetOutput(os.Stdout)
-	} else {
-		fsm := &FileSizeManager{}
-		if f, err := fsm.OpenFile(*logFile, MAX_LOGFILE_SIZE); err != nil {
-			log.WithError(err).WithField("file", *logFile).Fatal("cannot open logfile")
-		} else {
-			log.SetOutput(f)
-		}
-	}
-
-	log.SetLevel(parsedLogLevel)
-	log.SetReportCaller(parsedLogLevel == log.DebugLevel)
+	configureLogger(*logLevel, *logFile)
 
 	if *initialize {
-		logFileDirectory := filepath.Dir(*logFile)
-		log.WithField("dir", logFileDirectory).Info("ensuring directory")
-		os.MkdirAll(logFileDirectory, 0755)
-
-		dbFileDirectory := filepath.Dir(*dbFile)
-		log.WithField("dir", dbFileDirectory).Info("ensuring directory")
-		os.MkdirAll(dbFileDirectory, 0755)
-
+		initializeFiles(*logFile, *dbFile)
 		os.Exit(0)
 	}
 
@@ -129,47 +93,102 @@ func NewConfiguration() *Configuration {
 	}).Info("loaded configuration")
 
 	if *printDB {
-		db := NewDatabase(config)
-		if err := db.PrintDB(); err != nil {
-			log.WithError(err).Fatal("unable to print database")
-			os.Exit(1)
-		}
-
+		dumpDB(config)
 		os.Exit(0)
 	} else if *refresh {
-		db := NewDatabase(config)
-		auth, err := db.GetAuth()
-		if err != nil {
-			log.WithError(err).Fatal("cannot get current auth")
-		}
-
-		auth, err = RefreshAuth(config, NewClient(), auth)
-		if err != nil {
-			log.WithError(err).Fatal("error refreshing tokens")
-		}
-
-		if err := db.SetAuth(auth.Token, auth.Refresh); err != nil {
-			log.WithField("auth", auth).WithError(err).Fatal("cannot save refresh token")
-		}
-
-		log.WithField("auth", auth).Info("saved new tokens")
-
+		refreshTokens(config)
 		os.Exit(0)
 	} else if *auth != "" {
-		splitted := strings.Split(*auth, ":")
-		if len(splitted) != 2 {
-			log.WithField("split", splitted).Fatal("unable to parse tokens")
-		}
-
-		db := NewDatabase(config)
-		if err := db.SetAuth(splitted[0], splitted[1]); err != nil {
-			log.WithError(err).Fatal("unable to save tokens")
-		}
-
-		log.Info("saved tokens")
-
+		saveAuth(*auth, config)
 		os.Exit(0)
 	}
 
 	return config
+}
+
+func configureLogger(logLevel, logFile string) {
+	parsedLogLevel, err := log.ParseLevel(logLevel)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"level": logLevel,
+		}).WithError(err).Fatal("cannot parse log level")
+	}
+
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: true,
+		FullTimestamp: true,
+		ForceQuote:    true,
+	})
+
+	if logFile == "-" {
+		log.SetOutput(os.Stdout)
+	} else {
+		fsm := &FileSizeManager{}
+		if f, err := fsm.OpenFile(logFile, MAX_LOGFILE_SIZE); err != nil {
+			log.WithError(err).WithField("file", logFile).Fatal("cannot open logfile")
+		} else {
+			log.SetOutput(f)
+		}
+	}
+
+	log.SetLevel(parsedLogLevel)
+	log.SetReportCaller(parsedLogLevel == log.DebugLevel)
+}
+
+func initializeFiles(logFile, dbFile string) {
+	logFileDirectory := filepath.Dir(logFile)
+	log.WithField("dir", logFileDirectory).Info("ensuring directory")
+	os.MkdirAll(logFileDirectory, 0755)
+
+	dbFileDirectory := filepath.Dir(dbFile)
+	log.WithField("dir", dbFileDirectory).Info("ensuring directory")
+	os.MkdirAll(dbFileDirectory, 0755)
+}
+
+func printAuthURL(host string) {
+	fmt.Println("** please visit the below url **")
+	uriFmt := "https://%s/oauth/authorize?client_id=%s&scope=results:write&response_type=code&redirect_uri=%s"
+	fmt.Printf(uriFmt, host, PM5_OAUTH_APPID, PM5_OAUTH_CALLBACK)
+	fmt.Println("")
+}
+
+func dumpDB(config *Configuration) {
+	db := NewDatabase(config)
+	if err := db.PrintDB(); err != nil {
+		log.WithError(err).Fatal("unable to print database")
+		os.Exit(1)
+	}
+}
+
+func refreshTokens(config *Configuration) {
+	db := NewDatabase(config)
+	auth, err := db.GetAuth()
+	if err != nil {
+		log.WithError(err).Fatal("cannot get current auth")
+	}
+
+	auth, err = RefreshAuth(config, NewClient(), auth)
+	if err != nil {
+		log.WithError(err).Fatal("error refreshing tokens")
+	}
+
+	if err := db.SetAuth(auth.Token, auth.Refresh); err != nil {
+		log.WithField("auth", auth).WithError(err).Fatal("cannot save refresh token")
+	}
+
+	log.WithField("auth", auth).Info("saved new tokens")
+}
+
+func saveAuth(auth string, config *Configuration) {
+	splitted := strings.Split(auth, ":")
+	if len(splitted) != 2 {
+		log.WithField("split", splitted).Fatal("unable to parse tokens")
+	}
+
+	db := NewDatabase(config)
+	if err := db.SetAuth(splitted[0], splitted[1]); err != nil {
+		log.WithError(err).Fatal("unable to save tokens")
+	}
+
+	log.Info("saved tokens")
 }

@@ -1,6 +1,0 @@
-log_level: info
-log_file: /var/log/pm5.log
-
-ble_watchdog_deadline: 60s
-ble_watchdog_workout_disconnect: 7m
-ble_watchdog_workout_deadline: 45m
