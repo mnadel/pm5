@@ -24,6 +24,32 @@ func (s *Syncer) Close() {
 	s.cancelCh <- struct{}{}
 }
 
+func (s *Syncer) Sync() {
+	pendings, err := s.db.GetPendingWorkouts()
+	if err != nil {
+		log.WithError(err).Error("cannot get workouts to sync")
+		return
+	} else {
+		log.WithField("count", len(pendings)).Info("found records to sync")
+	}
+
+	for _, pending := range pendings {
+		raw := ReadWorkoutData(pending.Data)
+		parsed := raw.Decode()
+
+		log.WithFields(log.Fields{
+			"id": pending.ID,
+			"dt": parsed.LogEntry.Format(ISO8601),
+		}).Info("syncing record")
+
+		if err := s.logbook.PostWorkout(parsed); err != nil {
+			log.WithError(err).WithField("id", pending.ID).Error("error posting workout")
+		} else if err := s.db.MarkSent(pending.ID); err != nil {
+			log.WithError(err).WithField("id", pending.ID).Error("error marking workout sent")
+		}
+	}
+}
+
 func (s *Syncer) Start() {
 	go func() {
 	loop:
@@ -37,29 +63,7 @@ func (s *Syncer) Start() {
 			default:
 			}
 
-			pendings, err := s.db.GetPendingWorkouts()
-			if err != nil {
-				log.WithError(err).Error("cannot get workouts to sync")
-				continue
-			} else {
-				log.WithField("count", len(pendings)).Info("found records to sync")
-			}
-
-			for _, pending := range pendings {
-				raw := ReadWorkoutData(pending.Data)
-				parsed := raw.Decode()
-
-				log.WithFields(log.Fields{
-					"id": pending.ID,
-					"dt": parsed.LogEntry.Format(ISO8601),
-				}).Info("syncing record")
-
-				if err := s.logbook.PostWorkout(parsed); err != nil {
-					log.WithError(err).WithField("id", pending.ID).Error("error posting workout")
-				} else if err := s.db.MarkSent(pending.ID); err != nil {
-					log.WithError(err).WithField("id", pending.ID).Error("error marking workout sent")
-				}
-			}
+			s.Sync()
 		}
 
 		log.Info("syncer shut down")

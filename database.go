@@ -15,9 +15,10 @@ type Database struct {
 }
 
 type WorkoutDBRecord struct {
-	ID     uint64
-	Data   []byte
-	SentAt time.Time
+	ID        uint64
+	Data      []byte
+	SentAt    time.Time
+	CreatedAt time.Time
 }
 
 type AuthRecord struct {
@@ -147,6 +148,7 @@ func (d *Database) SaveWorkout(w *WorkoutDBRecord) error {
 
 		// update record
 		w.ID = id
+		w.CreatedAt = time.Now()
 
 		encoded, err := EncodeWorkoutRecord(w)
 		if err != nil {

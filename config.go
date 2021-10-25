@@ -49,6 +49,8 @@ func NewConfiguration() *Configuration {
 	printDB := flag.Bool("dbdump", false, "print the contents of the database")
 	refresh := flag.Bool("refresh", false, "get a new refresh token")
 	authURL := flag.Bool("authurl", false, "print the auth url")
+	migrate := flag.Bool("migrate", false, "migrate db records")
+	resubmit := flag.Bool("resubmit", false, "resubmit db records")
 
 	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
 	auth := flag.String("auth", "", "set the auth token in the form of id:secret")
@@ -101,6 +103,9 @@ func NewConfiguration() *Configuration {
 	} else if *auth != "" {
 		saveAuth(*auth, config)
 		os.Exit(0)
+	} else if *migrate {
+		migrateDB(config, *resubmit)
+		os.Exit(0)
 	}
 
 	return config
@@ -150,6 +155,38 @@ func printAuthURL(host string) {
 	uriFmt := "https://%s/oauth/authorize?client_id=%s&scope=results:write&response_type=code&redirect_uri=%s"
 	fmt.Printf(uriFmt, host, PM5_OAUTH_APPID, PM5_OAUTH_CALLBACK)
 	fmt.Println("")
+}
+
+func migrateDB(config *Configuration, resubmit bool) {
+	db := NewDatabase(config)
+	wos, err := db.GetWorkouts()
+	if err != nil {
+		panic(err)
+	}
+
+	log.WithField("count", len(wos)).Info("found records")
+
+	for i, wo := range wos {
+		log.WithFields(log.Fields{
+			"id":    i,
+			"bytes": wo.Data,
+		}).Info("migrating record")
+
+		if err := db.SaveWorkout(wo); err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"id":      i,
+				"workout": wo,
+			}).Error("cannot migrate")
+		}
+	}
+
+	if resubmit {
+		lb := NewLogbook(config, db, NewClient())
+		syncer := NewSyncer(lb, db)
+
+		log.Info("syncing unsent records")
+		syncer.Sync()
+	}
 }
 
 func dumpDB(config *Configuration) {
