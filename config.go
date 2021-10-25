@@ -172,7 +172,10 @@ func migrateDB(config *Configuration, resubmit bool) {
 			"bytes": wo.Data,
 		}).Info("migrating record")
 
-		if err := db.SaveWorkout(wo); err != nil {
+		// migration one: set CreatedAt
+		wo.CreatedAt = wo.Decode().Decode().LogEntry
+
+		if err := db.UpdateWorkout(wo); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"id":      i,
 				"workout": wo,

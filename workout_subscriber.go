@@ -43,7 +43,7 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 		"message": "workout",
 	}).Info("received message")
 
-	if err := ws.database.SaveWorkout(&WorkoutDBRecord{Data: data}); err != nil {
+	if err := ws.database.CreateWorkout(&WorkoutDBRecord{Data: data}); err != nil {
 		log.WithError(err).Error("error saving workout in db")
 	}
 

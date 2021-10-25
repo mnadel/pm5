@@ -138,7 +138,27 @@ func (d *Database) GetWorkout(id uint64) (*WorkoutDBRecord, error) {
 	return rec, err
 }
 
-func (d *Database) SaveWorkout(w *WorkoutDBRecord) error {
+func (d *Database) UpdateWorkout(w *WorkoutDBRecord) error {
+	return d.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("workouts"))
+		if err != nil {
+			return err
+		}
+
+		if w.ID == 0 {
+			return fmt.Errorf("record missing id")
+		}
+
+		encoded, err := EncodeWorkoutRecord(w)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(Itob(w.ID), encoded)
+	})
+}
+
+func (d *Database) CreateWorkout(w *WorkoutDBRecord) error {
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("workouts"))
 		if err != nil {
@@ -245,7 +265,10 @@ func (d *Database) PrintDB() error {
 		return err
 	}
 
-	fmt.Println("found", count, "records")
+	if count == 0 {
+		fmt.Println("found no records")
+		return nil
+	}
 
 	workouts, err := d.GetWorkouts()
 	if err != nil {
@@ -253,10 +276,10 @@ func (d *Database) PrintDB() error {
 	}
 
 	for _, workout := range workouts {
+		fmt.Printf("%v\n", workout)
+
 		raw := ReadWorkoutData(workout.Data)
-		decoded := raw.Decode()
-		fmt.Printf("id=%d, sent=%s\n", workout.ID, workout.SentAt.Format(ISO8601))
-		fmt.Println(decoded.AsJSON())
+		fmt.Println("->", raw.Decode().AsJSON())
 	}
 
 	return nil
