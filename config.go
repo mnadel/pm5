@@ -159,37 +159,10 @@ func printAuthURL(host string) {
 
 func migrateDB(config *Configuration, resubmit bool) {
 	db := NewDatabase(config)
-	wos, err := db.GetWorkouts()
-	if err != nil {
+	migrator := NewDBMigrator(db)
+
+	if err := migrator.Migrate(); err != nil {
 		panic(err)
-	}
-
-	log.WithField("count", len(wos)).Info("found records")
-
-	for _, wo := range wos {
-		raw := wo.Decode()
-		decoded := raw.Decode()
-
-		log.WithFields(log.Fields{
-			"id":      wo.ID,
-			"bytes":   wo.Data,
-			"raw":     raw,
-			"decoded": decoded,
-		}).Info("checking record")
-
-		// migration one: set CreatedAt
-		if wo.CreatedAt.IsZero() {
-			log.WithFields(log.Fields{
-				"id":         wo.ID,
-				"created_at": decoded.LogEntry,
-			}).Info("setting CreatedAt")
-
-			wo.CreatedAt = decoded.LogEntry
-		}
-
-		if err := db.UpdateWorkout(wo); err != nil {
-			log.WithError(err).WithField("id", wo.ID).Error("cannot migrate")
-		}
 	}
 
 	if resubmit {

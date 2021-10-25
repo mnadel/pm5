@@ -11,7 +11,7 @@ func TestDatabaseWriteRecord(t *testing.T) {
 	c := MustInt(db.Count())
 	assert.Equal(t, 0, c)
 
-	db.SaveWorkout(&WorkoutDBRecord{
+	db.CreateWorkout(&WorkoutDBRecord{
 		Data: []byte{0xc, 0xa, 0xf, 0xe, 0xb, 0xa, 0xb, 0xe},
 	})
 
