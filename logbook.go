@@ -77,7 +77,7 @@ func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) {
 
 func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord) (*AuthRecord, error) {
 	if os.Getenv("PM5_CLIENT_SECRET") == "" {
-		return nil, fmt.Errorf("missing: PM5_CLIENT_SECRET")
+		panic("missing: PM5_CLIENT_SECRET")
 	}
 
 	uri := fmt.Sprintf("https://%s/oauth/access_token", config.LogbookHost)
