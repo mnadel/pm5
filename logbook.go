@@ -64,6 +64,11 @@ func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) {
 	if newAuth, err := RefreshAuth(l.config, l.client, currentAuth); err != nil {
 		if err := l.db.SetAuth(newAuth.Token, newAuth.Refresh); err != nil {
 			log.WithError(err).Info("unable to save new tokens")
+		} else {
+			log.WithFields(log.Fields{
+				"new_token":   newAuth.Token,
+				"new_refresh": newAuth.Refresh,
+			}).Info("unable to save these tokens")
 		}
 	} else {
 		log.WithError(err).Info("unable to get new tokens")
