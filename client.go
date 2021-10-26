@@ -81,13 +81,13 @@ func (c *Client) Post(uri, body string, headers map[string]string) error {
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		defer res.Body.Close()
 		if body, err := ioutil.ReadAll(res.Body); err != nil {
-			log.WithError(err).WithField("status", res.Status).Error("error posting")
+			log.WithError(err).WithField("status", res.Status).Error("non-200 posting")
 		} else {
 			log.WithFields(log.Fields{
 				"uri":    uri,
 				"status": res.Status,
 				"body":   string(body),
-			}).Error("error posting")
+			}).Error("non-200 posting")
 		}
 		return fmt.Errorf(res.Status)
 	}
