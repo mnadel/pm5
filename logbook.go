@@ -72,6 +72,8 @@ func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) *AuthRecord {
 			"new_token":   newAuth.Token,
 			"new_refresh": newAuth.Refresh,
 		}).Info("unable to save these tokens")
+	} else {
+		log.Info("saved new refresh token")
 	}
 
 	return newAuth

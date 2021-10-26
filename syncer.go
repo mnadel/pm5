@@ -42,10 +42,13 @@ func (s *Syncer) Sync() {
 			"dt": parsed.LogEntry.Format(ISO8601),
 		}).Info("syncing record")
 
-		if err := s.logbook.PostWorkout(parsed); err != nil {
+		err := s.logbook.PostWorkout(parsed)
+		if err == nil || err.Error() == "409 Conflict" { // if no error or already sent, mark sent
+			if err := s.db.MarkSent(pending.ID); err != nil {
+				log.WithError(err).WithField("id", pending.ID).Error("error marking workout sent")
+			}
+		} else {
 			log.WithError(err).WithField("id", pending.ID).Error("error posting workout")
-		} else if err := s.db.MarkSent(pending.ID); err != nil {
-			log.WithError(err).WithField("id", pending.ID).Error("error marking workout sent")
 		}
 	}
 }
