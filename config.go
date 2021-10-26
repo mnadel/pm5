@@ -45,15 +45,14 @@ func NewTestConfiguration() *Configuration {
 }
 
 func NewConfiguration() *Configuration {
-	printDB := flag.Bool("dbdump", false, "print the contents of the database")
+	printDB := flag.Bool("dump", false, "print the contents of the database")
 	refresh := flag.Bool("refresh", false, "get a new refresh token")
 	authURL := flag.Bool("authurl", false, "print the auth url")
 	migrate := flag.Bool("migrate", false, "migrate db records")
-	resubmit := flag.Bool("resubmit", false, "resubmit db records")
 
 	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
 	auth := flag.String("auth", "", "set the auth token in the form of id:secret")
-	dbFile := flag.String("dbfile", "pm5.boltdb", "path to db file")
+	dbFile := flag.String("db", "pm5.boltdb", "path to db file")
 	logFile := flag.String("logfile", "-", "path to logfile, - for stdout")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	port := flag.String("port", ":2112", "web console port")
@@ -98,7 +97,7 @@ func NewConfiguration() *Configuration {
 		saveAuth(*auth, config)
 		os.Exit(0)
 	} else if *migrate {
-		migrateDB(config, *resubmit)
+		migrateDB(config)
 		os.Exit(0)
 	}
 
@@ -108,9 +107,7 @@ func NewConfiguration() *Configuration {
 func configureLogger(logLevel, logFile string) {
 	parsedLogLevel, err := log.ParseLevel(logLevel)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"level": logLevel,
-		}).WithError(err).Fatal("cannot parse log level")
+		panic(fmt.Sprintf("cannot parse log level %s: %v", logLevel, err))
 	}
 
 	log.SetFormatter(&log.TextFormatter{
@@ -128,7 +125,7 @@ func configureLogger(logLevel, logFile string) {
 
 		fsm := &FileSizeManager{}
 		if f, err := fsm.OpenFile(logFile, MAX_LOGFILE_SIZE); err != nil {
-			log.WithError(err).WithField("file", logFile).Fatal("cannot open logfile")
+			panic(fmt.Sprintf("cannot open logfile %s: %v", logFile, err))
 		} else {
 			log.SetOutput(f)
 		}
@@ -145,28 +142,19 @@ func printAuthURL(host string) {
 	fmt.Println("")
 }
 
-func migrateDB(config *Configuration, resubmit bool) {
+func migrateDB(config *Configuration) {
 	db := NewDatabase(config)
 	migrator := NewDBMigrator(db)
 
 	if err := migrator.Migrate(); err != nil {
 		panic(err)
 	}
-
-	if resubmit {
-		lb := NewLogbook(config, db, NewClient())
-		syncer := NewSyncer(lb, db)
-
-		log.Info("syncing unsent records")
-		syncer.Sync()
-	}
 }
 
 func dumpDB(config *Configuration) {
 	db := NewDatabase(config)
 	if err := db.PrintDB(); err != nil {
-		log.WithError(err).Fatal("unable to print database")
-		os.Exit(1)
+		panic(err)
 	}
 }
 
@@ -174,16 +162,16 @@ func refreshTokens(config *Configuration) {
 	db := NewDatabase(config)
 	auth, err := db.GetAuth()
 	if err != nil {
-		log.WithError(err).Fatal("cannot get current auth")
+		panic(fmt.Sprintf("cannot find auth: %v", err))
 	}
 
 	auth, err = RefreshAuth(config, NewClient(), auth)
 	if err != nil {
-		log.WithError(err).Fatal("error refreshing tokens")
+		panic(fmt.Sprintf("cannot refresh auth: %v", err))
 	}
 
 	if err := db.SetAuth(auth.Token, auth.Refresh); err != nil {
-		log.WithField("auth", auth).WithError(err).Fatal("cannot save refresh token")
+		panic(fmt.Sprintf("cannot save auth %v: %v", auth, err))
 	}
 
 	log.WithField("auth", auth).Info("saved new tokens")
@@ -192,12 +180,12 @@ func refreshTokens(config *Configuration) {
 func saveAuth(auth string, config *Configuration) {
 	splitted := strings.Split(auth, ":")
 	if len(splitted) != 2 {
-		log.WithField("split", splitted).Fatal("unable to parse tokens")
+		panic(fmt.Sprintf("cannot parse: %v", auth))
 	}
 
 	db := NewDatabase(config)
 	if err := db.SetAuth(splitted[0], splitted[1]); err != nil {
-		log.WithError(err).Fatal("unable to save tokens")
+		panic(fmt.Sprintf("cannot save tokens: %v", err))
 	}
 
 	log.Info("saved tokens")
