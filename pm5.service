@@ -7,10 +7,8 @@ After=bluetooth.target network.target
 User=root
 Group=root
 Type=simple
-Environment="CLIARGS=--logfile /var/log/pm5.log --dbfile /var/run/pm5/pm5.boltdb"
 Environment="PM5_CLIENT_SECRET=abc123xyz"
-ExecStartPre=/home/pi/go/bin/pm5 $CLIARGS --init
-ExecStart=/home/pi/go/bin/pm5 $CLIARGS
+ExecStart=/home/pi/go/bin/pm5 --logfile /var/log/pm5.log --dbfile /var/run/pm5/pm5.boltdb
 ExecStop=/usr/bin/sleep 5
 Restart=always
 RestartSec=5

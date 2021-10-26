@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -27,12 +29,21 @@ type AuthRecord struct {
 }
 
 func NewDatabase(c *Configuration) *Database {
+	dbFileDirectory := filepath.Dir(c.DBFile)
+	log.WithField("dir", dbFileDirectory).Info("ensuring directory")
+	os.MkdirAll(dbFileDirectory, 0755)
+
 	db, err := bolt.Open(c.DBFile, 0644, nil)
 	if err != nil {
 		log.WithError(err).WithField("db", c.DBFile).Fatal("cannot open db")
 	}
 
-	return &Database{db}
+	d := &Database{db}
+	if err := d.initDB(); err != nil {
+		panic(err)
+	}
+
+	return d
 }
 
 func (d *Database) Close() {
@@ -249,6 +260,20 @@ func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
 	})
 
 	return data, err
+}
+
+func (d *Database) initDB() error {
+	return d.db.Update(func(tx *bolt.Tx) error {
+		if _, err := tx.CreateBucketIfNotExists([]byte("workouts")); err != nil {
+			return err
+		}
+
+		if _, err := tx.CreateBucketIfNotExists([]byte("auth")); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (d *Database) PrintDB() error {

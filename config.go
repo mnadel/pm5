@@ -45,7 +45,6 @@ func NewTestConfiguration() *Configuration {
 }
 
 func NewConfiguration() *Configuration {
-	initialize := flag.Bool("init", false, "initialize the given config (make directories, etc)")
 	printDB := flag.Bool("dbdump", false, "print the contents of the database")
 	refresh := flag.Bool("refresh", false, "get a new refresh token")
 	authURL := flag.Bool("authurl", false, "print the auth url")
@@ -70,13 +69,6 @@ func NewConfiguration() *Configuration {
 		os.Exit(0)
 	}
 
-	configureLogger(*logLevel, *logFile)
-
-	if *initialize {
-		initializeFiles(*logFile, *dbFile)
-		os.Exit(0)
-	}
-
 	config := &Configuration{
 		LogbookHost:                  *host,
 		DBFile:                       *dbFile,
@@ -85,6 +77,8 @@ func NewConfiguration() *Configuration {
 		BleWatchdogWorkoutDeadline:   *bleWatchdogWorkoutDeadline,
 		AdminConsolePort:             *port,
 	}
+
+	configureLogger(*logLevel, *logFile)
 
 	cwd, _ := os.Getwd()
 
@@ -128,6 +122,10 @@ func configureLogger(logLevel, logFile string) {
 	if logFile == "-" {
 		log.SetOutput(os.Stdout)
 	} else {
+		logFileDirectory := filepath.Dir(logFile)
+		log.WithField("dir", logFileDirectory).Info("ensuring directory")
+		os.MkdirAll(logFileDirectory, 0755)
+
 		fsm := &FileSizeManager{}
 		if f, err := fsm.OpenFile(logFile, MAX_LOGFILE_SIZE); err != nil {
 			log.WithError(err).WithField("file", logFile).Fatal("cannot open logfile")
@@ -138,16 +136,6 @@ func configureLogger(logLevel, logFile string) {
 
 	log.SetLevel(parsedLogLevel)
 	log.SetReportCaller(parsedLogLevel == log.DebugLevel)
-}
-
-func initializeFiles(logFile, dbFile string) {
-	logFileDirectory := filepath.Dir(logFile)
-	log.WithField("dir", logFileDirectory).Info("ensuring directory")
-	os.MkdirAll(logFileDirectory, 0755)
-
-	dbFileDirectory := filepath.Dir(dbFile)
-	log.WithField("dir", dbFileDirectory).Info("ensuring directory")
-	os.MkdirAll(dbFileDirectory, 0755)
 }
 
 func printAuthURL(host string) {
