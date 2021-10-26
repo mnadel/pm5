@@ -29,8 +29,7 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 		if auth, err := l.db.GetAuth(); err != nil {
 			return err
 		} else {
-			l.auth = auth
-			go l.tryGetNewRefreshToken(auth)
+			l.auth = l.tryGetNewRefreshToken(auth)
 		}
 	}
 
@@ -58,21 +57,24 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 	return l.client.Post(uri, string(payload), headers)
 }
 
-func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) {
+func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) *AuthRecord {
 	log.Info("attempting to get new refresh token")
 
-	if newAuth, err := RefreshAuth(l.config, l.client, currentAuth); err == nil {
-		if err := l.db.SetAuth(newAuth.Token, newAuth.Refresh); err != nil {
-			log.WithError(err).Info("unable to save new tokens")
-		} else {
-			log.WithFields(log.Fields{
-				"new_token":   newAuth.Token,
-				"new_refresh": newAuth.Refresh,
-			}).Info("unable to save these tokens")
-		}
-	} else {
+	newAuth, err := RefreshAuth(l.config, l.client, currentAuth)
+	if err != nil {
 		log.WithError(err).Info("unable to get new tokens")
+		return currentAuth
 	}
+
+	err = l.db.SetAuth(newAuth.Token, newAuth.Refresh)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"new_token":   newAuth.Token,
+			"new_refresh": newAuth.Refresh,
+		}).Info("unable to save these tokens")
+	}
+
+	return newAuth
 }
 
 func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord) (*AuthRecord, error) {
