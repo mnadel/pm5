@@ -276,10 +276,8 @@ func (d *Database) PrintDB() error {
 	}
 
 	for _, workout := range workouts {
-		fmt.Printf("%v\n", workout)
-
 		raw := ReadWorkoutData(workout.Data)
-		fmt.Println("->", raw.Decode().AsJSON())
+		fmt.Printf("%v -> %s\n", workout, raw.Decode().AsJSON())
 	}
 
 	return nil
