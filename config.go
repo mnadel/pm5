@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MAX_LOGFILE_SIZE   = 5*2 ^ 20 // 5MB
+	MAX_LOGFILE_SIZE   = 10485760 // 10MB
 	PM5_OAUTH_APPID    = "ymMRExBCsS6HqDm9ShMEPRvpR3Hh2DPb3FTtiazX"
 	PM5_OAUTH_CALLBACK = "https://auth.pm5-book.workers.dev/c2"
 )
