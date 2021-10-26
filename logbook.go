@@ -61,7 +61,7 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) {
 	log.Info("attempting to get new refresh token")
 
-	if newAuth, err := RefreshAuth(l.config, l.client, currentAuth); err != nil {
+	if newAuth, err := RefreshAuth(l.config, l.client, currentAuth); err == nil {
 		if err := l.db.SetAuth(newAuth.Token, newAuth.Refresh); err != nil {
 			log.WithError(err).Info("unable to save new tokens")
 		} else {
