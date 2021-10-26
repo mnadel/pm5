@@ -54,7 +54,7 @@ func NewConfiguration() *Configuration {
 
 	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
 	auth := flag.String("auth", "", "set the auth token in the form of id:secret")
-	dbFile := flag.String("dbfile", "/var/run/pm5/pm5.boltdb", "path to db file")
+	dbFile := flag.String("dbfile", "pm5.boltdb", "path to db file")
 	logFile := flag.String("logfile", "-", "path to logfile, - for stdout")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	port := flag.String("port", ":2112", "web console port")
