@@ -52,6 +52,8 @@ func (s *Syncer) Sync() {
 
 func (s *Syncer) Start() {
 	go func() {
+		s.Sync()
+
 	loop:
 		for {
 			timer := time.NewTimer(time.Second * 30)
