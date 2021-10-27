@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -82,15 +81,15 @@ func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) *AuthRecord {
 
 // see https://log.concept2.com/developers/documentation/#authentication-access-token-post
 func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord) (*AuthRecord, error) {
-	if os.Getenv("PM5_CLIENT_SECRET") == "" {
-		panic("missing: PM5_CLIENT_SECRET")
+	if PM5_OAUTH_SECRET == "" {
+		panic("missing: PM5_OAUTH_SECRET")
 	}
 
 	uri := fmt.Sprintf("https://%s/oauth/access_token", config.LogbookHost)
 
 	data := url.Values{}
-	data.Set("client_id", "ymMRExBCsS6HqDm9ShMEPRvpR3Hh2DPb3FTtiazX")
-	data.Set("client_secret", os.Getenv("PM5_CLIENT_SECRET"))
+	data.Set("client_id", PM5_OAUTH_APPID)
+	data.Set("client_secret", PM5_OAUTH_SECRET)
 	data.Set("grant_type", "refresh_token")
 	data.Set("scope", "results:write")
 	data.Set("refresh_token", currentAuth.Refresh)

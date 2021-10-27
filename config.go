@@ -19,6 +19,10 @@ const (
 	PM5_OAUTH_CALLBACK = "https://auth.pm5-book.workers.dev/c2"
 )
 
+var (
+	PM5_OAUTH_SECRET = os.Getenv("PM5_OAUTH_SECRET")
+)
+
 type Configuration struct {
 	// LogbookHost is the DNS host of the Logbook service
 	LogbookHost string
@@ -80,12 +84,10 @@ func NewConfiguration() *Configuration {
 
 	configureLogger(*logLevel, *logFile)
 
-	cwd, _ := os.Getwd()
-
 	log.WithFields(log.Fields{
 		"config": *config,
 		"user":   os.Getenv("USER"),
-		"cwd":    cwd,
+		"cwd":    MustGetCwd(),
 	}).Info("loaded configuration")
 
 	if *printDB {
@@ -178,7 +180,7 @@ func refreshTokens(config *Configuration) {
 func saveAuth(auth string, config *Configuration) {
 	splitted := strings.Split(auth, ":")
 	if len(splitted) != 2 {
-		Panic(fmt.Errorf("len=%d", len(splitted)), "cannot parse: %v")
+		Panic(fmt.Errorf("parsed=%v", splitted), "cannot parse %v", auth)
 	}
 
 	db := NewDatabase(config)

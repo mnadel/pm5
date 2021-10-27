@@ -95,3 +95,9 @@ func MustInt(val int, err error) int {
 func Panic(err error, msg string, args ...interface{}) {
 	panic(fmt.Sprintf(msg+": %v", append(args, err)))
 }
+
+// MustGetCwd gets the cwd w/o returning an error (but could be "" if there was one)
+func MustGetCwd() string {
+	cwd, _ := os.Getwd()
+	return cwd
+}
