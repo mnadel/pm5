@@ -90,3 +90,8 @@ func MustInt(val int, err error) int {
 
 	return val
 }
+
+// Panic panics with a formatted message
+func Panic(err error, msg string, args ...interface{}) {
+	panic(fmt.Sprintf(msg+": %v", append(args, err)))
+}

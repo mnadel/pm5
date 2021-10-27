@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -29,9 +27,7 @@ type AuthRecord struct {
 }
 
 func NewDatabase(c *Configuration) *Database {
-	dbFileDirectory := filepath.Dir(c.DBFile)
-	log.WithField("dir", dbFileDirectory).Info("ensuring directory")
-	os.MkdirAll(dbFileDirectory, 0755)
+	(&FileManager{}).Mkdirs(c.DBFile)
 
 	db, err := bolt.Open(c.DBFile, 0644, nil)
 	if err != nil {

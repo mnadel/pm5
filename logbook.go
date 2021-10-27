@@ -24,6 +24,7 @@ func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
 	}
 }
 
+// see: https://log.concept2.com/developers/documentation/#authentication-access-token-post
 func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 	if l.auth == nil {
 		if auth, err := l.db.GetAuth(); err != nil {
@@ -79,6 +80,7 @@ func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) *AuthRecord {
 	return newAuth
 }
 
+// see https://log.concept2.com/developers/documentation/#authentication-access-token-post
 func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord) (*AuthRecord, error) {
 	if os.Getenv("PM5_CLIENT_SECRET") == "" {
 		panic("missing: PM5_CLIENT_SECRET")

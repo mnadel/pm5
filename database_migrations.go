@@ -70,6 +70,7 @@ func (dbm *DBMigrator) MigrateRecord(rec *WorkoutDBRecord) (bool, error) {
 	return updatedRecord, nil
 }
 
+// migration_20211025 adds a CreatedAt field and sets it equal to the Workout's LogEntry date
 func (dbm DBMigrator) migration_20211025(rec *WorkoutDBRecord, wo *WorkoutData) (bool, error) {
 	if rec.CreatedAt.IsZero() {
 		log.WithFields(log.Fields{

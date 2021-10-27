@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -107,7 +106,7 @@ func NewConfiguration() *Configuration {
 func configureLogger(logLevel, logFile string) {
 	parsedLogLevel, err := log.ParseLevel(logLevel)
 	if err != nil {
-		panic(fmt.Sprintf("cannot parse log level %s: %v", logLevel, err))
+		Panic(err, "cannot parse log level %s", logLevel)
 	}
 
 	log.SetFormatter(&log.TextFormatter{
@@ -119,13 +118,11 @@ func configureLogger(logLevel, logFile string) {
 	if logFile == "-" {
 		log.SetOutput(os.Stdout)
 	} else {
-		logFileDirectory := filepath.Dir(logFile)
-		log.WithField("dir", logFileDirectory).Info("ensuring directory")
-		os.MkdirAll(logFileDirectory, 0755)
+		fm := &FileManager{}
+		fm.Mkdirs(logFile)
 
-		fsm := &FileSizeManager{}
-		if f, err := fsm.OpenFile(logFile, MAX_LOGFILE_SIZE); err != nil {
-			panic(fmt.Sprintf("cannot open logfile %s: %v", logFile, err))
+		if f, err := fm.OpenFile(logFile, MAX_LOGFILE_SIZE); err != nil {
+			Panic(err, "cannot open logfile %s", logFile)
 		} else {
 			log.SetOutput(f)
 		}
@@ -162,16 +159,16 @@ func refreshTokens(config *Configuration) {
 	db := NewDatabase(config)
 	auth, err := db.GetAuth()
 	if err != nil {
-		panic(fmt.Sprintf("cannot find auth: %v", err))
+		Panic(err, "cannot find auth")
 	}
 
 	auth, err = RefreshAuth(config, NewClient(), auth)
 	if err != nil {
-		panic(fmt.Sprintf("cannot refresh auth: %v", err))
+		Panic(err, "cannot refresh auth")
 	}
 
 	if err := db.SetAuth(auth.Token, auth.Refresh); err != nil {
-		panic(fmt.Sprintf("cannot save auth %v: %v", auth, err))
+		Panic(err, "cannot save auth %v", auth)
 	}
 
 	log.WithField("auth", auth).Info("saved new tokens")
@@ -180,12 +177,12 @@ func refreshTokens(config *Configuration) {
 func saveAuth(auth string, config *Configuration) {
 	splitted := strings.Split(auth, ":")
 	if len(splitted) != 2 {
-		panic(fmt.Sprintf("cannot parse: %v", auth))
+		Panic(fmt.Errorf("len=%d", len(splitted)), "cannot parse: %v")
 	}
 
 	db := NewDatabase(config)
 	if err := db.SetAuth(splitted[0], splitted[1]); err != nil {
-		panic(fmt.Sprintf("cannot save tokens: %v", err))
+		Panic(err, "cannot save tokens")
 	}
 
 	log.Info("saved tokens")
