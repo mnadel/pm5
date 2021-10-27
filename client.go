@@ -34,7 +34,7 @@ func (c *Client) PostForm(uri string, data url.Values) (map[string]interface{}, 
 	res, err := c.client.Do(req)
 	respTime := time.Since(t)
 
-	HTTPClientRespTime.WithLabelValues(uri, res.Status).Observe(respTime.Seconds())
+	HTTPClientRespTime.WithLabelValues(uri, "post", res.Status).Observe(respTime.Seconds())
 
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (c *Client) Post(uri, body string, headers map[string]string) error {
 	res, err := c.client.Do(req)
 	respTime := time.Since(t)
 
-	HTTPClientRespTime.WithLabelValues(uri, res.Status).Observe(respTime.Seconds())
+	HTTPClientRespTime.WithLabelValues(uri, "post", res.Status).Observe(respTime.Seconds())
 
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func (c *Client) GetJSON(uri string, headers map[string]string) (map[string]inte
 	res, err := c.client.Do(req)
 	respTime := time.Since(t)
 
-	HTTPClientRespTime.WithLabelValues(uri, res.Status).Observe(respTime.Seconds())
+	HTTPClientRespTime.WithLabelValues(uri, "get", res.Status).Observe(respTime.Seconds())
 
 	if err != nil {
 		return nil, err

@@ -29,5 +29,5 @@ var (
 	HTTPClientRespTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name: "pm5_http_client_resp_time",
 		Help: "HTTP response times from our outbound HTTP client",
-	}, []string{"endpoint", "status"})
+	}, []string{"uri", "method", "code"})
 )
