@@ -10,6 +10,7 @@ type Syncer struct {
 	db       *Database
 	logbook  *Logbook
 	cancelCh chan struct{}
+	lastLog  time.Time
 }
 
 func NewSyncer(logbook *Logbook, db *Database) *Syncer {
@@ -29,8 +30,9 @@ func (s *Syncer) Sync() {
 	if err != nil {
 		log.WithError(err).Error("cannot get workouts to sync")
 		return
-	} else {
+	} else if time.Since(s.lastLog) >= time.Minute*5 {
 		log.WithField("count", len(pendings)).Info("found records to sync")
+		s.lastLog = time.Now()
 	}
 
 	for _, pending := range pendings {

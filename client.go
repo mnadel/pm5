@@ -30,12 +30,7 @@ func (c *Client) PostForm(uri string, data url.Values) (map[string]interface{}, 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
-	t := time.Now()
-	res, err := c.client.Do(req)
-	respTime := time.Since(t)
-
-	HTTPClientRespTime.WithLabelValues(uri, "post", res.Status).Observe(respTime.Seconds())
-
+	res, err := c.doWithMetrics(req, uri, http.MethodPost)
 	if err != nil {
 		return nil, err
 	}
@@ -78,12 +73,7 @@ func (c *Client) Post(uri, body string, headers map[string]string) error {
 		req.Header.Add(k, v)
 	}
 
-	t := time.Now()
-	res, err := c.client.Do(req)
-	respTime := time.Since(t)
-
-	HTTPClientRespTime.WithLabelValues(uri, "post", res.Status).Observe(respTime.Seconds())
-
+	res, err := c.doWithMetrics(req, uri, http.MethodPost)
 	if err != nil {
 		return err
 	}
@@ -106,7 +96,7 @@ func (c *Client) Post(uri, body string, headers map[string]string) error {
 }
 
 func (c *Client) GetJSON(uri string, headers map[string]string) (map[string]interface{}, error) {
-	req, err := http.NewRequest("GET", uri, nil)
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -115,12 +105,7 @@ func (c *Client) GetJSON(uri string, headers map[string]string) (map[string]inte
 		req.Header.Add(k, v)
 	}
 
-	t := time.Now()
-	res, err := c.client.Do(req)
-	respTime := time.Since(t)
-
-	HTTPClientRespTime.WithLabelValues(uri, "get", res.Status).Observe(respTime.Seconds())
-
+	res, err := c.doWithMetrics(req, uri, http.MethodGet)
 	if err != nil {
 		return nil, err
 	}
@@ -147,4 +132,14 @@ func (c *Client) GetJSON(uri string, headers map[string]string) (map[string]inte
 	}
 
 	return m, nil
+}
+
+func (c *Client) doWithMetrics(req *http.Request, uri, method string) (*http.Response, error) {
+	t := time.Now()
+	res, err := c.client.Do(req)
+	respTime := time.Since(t)
+
+	HTTPClientRespTime.WithLabelValues(uri, method, res.Status).Observe(respTime.Seconds())
+
+	return res, err
 }
