@@ -21,4 +21,4 @@ build-pi0:
 deploy:
 	ssh pi@pm5 'sudo systemctl stop pm5'
 	scp pm5 pi@pm5:/home/pi
-	ssh pi@pm5 'sudo systemctl stop pm5'
+	ssh pi@pm5 'sudo systemctl start pm5'

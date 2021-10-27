@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/natefinch/lumberjack.v2"
+
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 )
@@ -118,14 +120,13 @@ func configureLogger(logLevel, logFile string) {
 	if logFile == "-" {
 		log.SetOutput(os.Stdout)
 	} else {
-		fm := &FileManager{}
-		fm.Mkdirs(logFile)
-
-		if f, err := fm.OpenFile(logFile, MAX_LOGFILE_SIZE); err != nil {
-			Panic(err, "cannot open logfile %s", logFile)
-		} else {
-			log.SetOutput(f)
-		}
+		log.SetOutput(&lumberjack.Logger{
+			Filename:   logFile,
+			MaxSize:    5, // megabytes
+			MaxBackups: 10,
+			MaxAge:     int(time.Hour.Hours() * 24 * 31),
+			Compress:   false,
+		})
 	}
 
 	log.SetLevel(parsedLogLevel)
