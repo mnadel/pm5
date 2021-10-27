@@ -30,7 +30,12 @@ func (c *Client) PostForm(uri string, data url.Values) (map[string]interface{}, 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
+	t := time.Now()
 	res, err := c.client.Do(req)
+	respTime := time.Since(t)
+
+	HTTPClientRespTime.WithLabelValues(uri, res.Status).Observe(respTime.Seconds())
+
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +78,12 @@ func (c *Client) Post(uri, body string, headers map[string]string) error {
 		req.Header.Add(k, v)
 	}
 
+	t := time.Now()
 	res, err := c.client.Do(req)
+	respTime := time.Since(t)
+
+	HTTPClientRespTime.WithLabelValues(uri, res.Status).Observe(respTime.Seconds())
+
 	if err != nil {
 		return err
 	}
@@ -105,7 +115,12 @@ func (c *Client) GetJSON(uri string, headers map[string]string) (map[string]inte
 		req.Header.Add(k, v)
 	}
 
+	t := time.Now()
 	res, err := c.client.Do(req)
+	respTime := time.Since(t)
+
+	HTTPClientRespTime.WithLabelValues(uri, res.Status).Observe(respTime.Seconds())
+
 	if err != nil {
 		return nil, err
 	}
