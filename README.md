@@ -21,7 +21,7 @@ NB you might also need to pair your device with your PM5. On my Pi it looked som
 
 # Configuration
 
-## `ble_watchdog_workout_deadline`
+## `--deadline`
 
 It's possible to connect to the PM5 but never receive Workout data nor a disconnect event. In this case, we'd indefinitely await Workout data.
 
