@@ -17,6 +17,7 @@ const (
 	MAX_LOGFILE_SIZE   = 10485760 // 10MB
 	PM5_OAUTH_APPID    = "ymMRExBCsS6HqDm9ShMEPRvpR3Hh2DPb3FTtiazX"
 	PM5_OAUTH_CALLBACK = "https://auth.pm5-book.workers.dev/c2"
+	PM5_USER_UUID      = "36cfe3f2-016a-43d5-af49-ed7140a43cf0"
 )
 
 var (
@@ -56,7 +57,7 @@ func NewConfiguration() *Configuration {
 	migrate := flag.Bool("migrate", false, "migrate db records")
 
 	host := flag.String("host", "log.concept2.com", "specify the logbook service hostname")
-	auth := flag.String("auth", "", "set the auth token in the form of id:secret")
+	auth := flag.String("auth", "", "set the auth token in the form of uuid:id:secret")
 	dbFile := flag.String("db", "pm5.boltdb", "path to db file")
 	logFile := flag.String("logfile", "-", "path to logfile, - for stdout")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
@@ -160,33 +161,50 @@ func dumpDB(config *Configuration) {
 
 func refreshTokens(config *Configuration) {
 	db := NewDatabase(config)
-	auth, err := db.GetAuth()
+	users, err := db.GetUsers()
 	if err != nil {
-		Panic(err, "cannot find auth")
+		Panic(err, "cannot get users")
 	}
 
-	auth, err = RefreshAuth(config, NewClient(), auth)
-	if err != nil {
-		Panic(err, "cannot refresh auth")
-	}
+	for _, user := range users {
+		if err := RefreshAuth(config, NewClient(), user); err != nil {
+			Panic(err, "cannot refresh auth")
+		}
 
-	if err := db.SetAuth(auth.Token, auth.Refresh); err != nil {
-		Panic(err, "cannot save auth %v", auth)
-	}
+		if err := db.UpsertUser(user); err != nil {
+			Panic(err, "cannot save user %v", user)
+		}
 
-	log.WithField("auth", auth).Info("saved new tokens")
+		log.WithField("user", *user).Info("saved user")
+	}
 }
 
 func saveAuth(auth string, config *Configuration) {
 	splitted := strings.Split(auth, ":")
-	if len(splitted) != 2 {
+	if len(splitted) != 3 {
 		Panic(fmt.Errorf("parsed=%v", splitted), "cannot parse %v", auth)
 	}
 
 	db := NewDatabase(config)
-	if err := db.SetAuth(splitted[0], splitted[1]); err != nil {
-		Panic(err, "cannot save tokens")
+	user, err := db.GetUser(splitted[0])
+	if err != nil {
+		Panic(err, "cannot search for user")
 	}
 
-	log.Info("saved tokens")
+	if user == nil {
+		user = &User{
+			UUID: splitted[0],
+		}
+	}
+
+	user.Token = splitted[1]
+	user.Refresh = splitted[2]
+
+	log.WithField("user", *user).Info("upserting user")
+
+	if err := db.UpsertUser(user); err != nil {
+		Panic(err, "cannot save user")
+	}
+
+	log.Info("saved user")
 }

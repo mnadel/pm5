@@ -19,9 +19,11 @@ type WorkoutDBRecord struct {
 	Data      []byte
 	SentAt    time.Time
 	CreatedAt time.Time
+	UserUUID  string
 }
 
-type AuthRecord struct {
+type User struct {
+	UUID    string
 	Token   string
 	Refresh string
 }
@@ -50,50 +52,64 @@ func (d *Database) Stats() bolt.Stats {
 	return d.db.Stats()
 }
 
-func (d *Database) SetAuth(token, refresh string) error {
+func (d *Database) UpsertUser(user *User) error {
+	if user.UUID == "" {
+		return fmt.Errorf("user is missing uuid")
+	}
+
 	return d.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte("auth"))
+		b, err := tx.CreateBucketIfNotExists([]byte("users"))
 		if err != nil {
 			return err
 		}
 
-		if err := b.Put([]byte("token"), []byte(token)); err != nil {
+		encoded, err := EncodeUserRecord(user)
+		if err != nil {
 			return err
 		}
 
-		if err := b.Put([]byte("refresh"), []byte(refresh)); err != nil {
-			return err
-		}
-
-		return nil
+		return b.Put([]byte(user.UUID), encoded)
 	})
 }
 
-func (d *Database) GetAuth() (*AuthRecord, error) {
-	var rec AuthRecord
+func (d *Database) GetUsers() ([]*User, error) {
+	users := make([]*User, 0)
 
 	err := d.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("auth"))
+		b := tx.Bucket([]byte("users"))
 		if b == nil {
-			return fmt.Errorf("auth bucket not found")
+			return fmt.Errorf("users bucket not found")
 		}
 
-		if tokBytes := b.Get([]byte("token")); tokBytes == nil {
-			return fmt.Errorf("cannot find key=token")
-		} else {
-			rec.Token = string(tokBytes)
-		}
+		c := b.Cursor()
 
-		if refreshBytes := b.Get([]byte("refresh")); refreshBytes == nil {
-			return fmt.Errorf("cannot find key=refresh")
-		} else {
-			rec.Refresh = string(refreshBytes)
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			if user, err := DecodeUserRecord(b.Get(k)); err != nil {
+				return err
+			} else {
+				users = append(users, user)
+			}
 		}
 
 		return nil
 	})
 
-	return &rec, err
+	return users, err
+}
+
+func (d *Database) GetUser(uuid string) (*User, error) {
+	users, err := d.GetUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users {
+		if user.UUID == uuid {
+			return user, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func (d *Database) MarkSent(id uint64) error {
@@ -264,7 +280,7 @@ func (d *Database) initDB() error {
 			return err
 		}
 
-		if _, err := tx.CreateBucketIfNotExists([]byte("auth")); err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte("users")); err != nil {
 			return err
 		}
 
@@ -273,22 +289,17 @@ func (d *Database) initDB() error {
 }
 
 func (d *Database) PrintDB() error {
-	auth, err := d.GetAuth()
+	users, err := d.GetUsers()
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("   auth", auth.Token)
-	fmt.Println("refresh", auth.Refresh)
+	fmt.Println("######## users ########")
 
-	count, err := d.Count()
-	if err != nil {
-		return err
-	}
-
-	if count == 0 {
-		fmt.Println("found no records")
-		return nil
+	for _, user := range users {
+		fmt.Println("***** uuid", user.UUID)
+		fmt.Println("     token", user.Token)
+		fmt.Println("   refresh", user.Refresh)
 	}
 
 	workouts, err := d.GetWorkouts()
@@ -296,10 +307,13 @@ func (d *Database) PrintDB() error {
 		return err
 	}
 
+	fmt.Println("######## workouts ########")
+
 	for _, workout := range workouts {
 		raw := ReadWorkoutData(workout.Data)
 
 		fmt.Println("******* id", workout.ID)
+		fmt.Println("      user", workout.UserUUID)
 		fmt.Println("   created", workout.CreatedAt)
 		fmt.Println("      sent", workout.SentAt)
 		fmt.Println("      data", workout.Data)
@@ -333,4 +347,26 @@ func DecodeWorkoutRecord(data []byte) (*WorkoutDBRecord, error) {
 	}
 
 	return &wr, nil
+}
+
+func EncodeUserRecord(user *User) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(user); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func DecodeUserRecord(data []byte) (*User, error) {
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+
+	var user User
+	if err := dec.Decode(&user); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }

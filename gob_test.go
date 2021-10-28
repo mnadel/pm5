@@ -41,3 +41,21 @@ func TestGobEncodingMigrations(t *testing.T) {
 	assert.Equal(t, b.Foo, "three")
 	assert.True(t, b.Time.IsZero())
 }
+
+func TestGobEncodingUsers(t *testing.T) {
+	user := &User{
+		UUID:    "a",
+		Token:   "b",
+		Refresh: "c",
+	}
+
+	encoded, err := EncodeUserRecord(user)
+	assert.NoError(t, err)
+
+	decoded, err := DecodeUserRecord(encoded)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "a", decoded.UUID)
+	assert.Equal(t, "b", decoded.Token)
+	assert.Equal(t, "c", decoded.Refresh)
+}

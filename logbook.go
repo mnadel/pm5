@@ -12,7 +12,7 @@ type Logbook struct {
 	db     *Database
 	client *Client
 	config *Configuration
-	auth   *AuthRecord
+	user   *User
 }
 
 func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
@@ -25,16 +25,19 @@ func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
 
 // see: https://log.concept2.com/developers/documentation/#authentication-access-token-post
 func (l *Logbook) PostWorkout(wo *WorkoutData) error {
-	if l.auth == nil {
-		if auth, err := l.db.GetAuth(); err != nil {
+	if l.user == nil {
+		if user, err := l.db.GetUser(PM5_USER_UUID); err != nil {
 			return err
 		} else {
-			l.auth = l.tryGetNewRefreshToken(auth)
+			l.user = user
+			if err := l.tryGetNewRefreshToken(); err != nil {
+				return err
+			}
 		}
 	}
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", l.auth.Token),
+		"Authorization": fmt.Sprintf("Bearer %s", l.user.Token),
 		"Content-Type":  "application/json",
 	}
 
@@ -57,30 +60,29 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 	return l.client.Post(uri, string(payload), headers)
 }
 
-func (l *Logbook) tryGetNewRefreshToken(currentAuth *AuthRecord) *AuthRecord {
+func (l *Logbook) tryGetNewRefreshToken() error {
 	log.Info("attempting to get new refresh token")
 
-	newAuth, err := RefreshAuth(l.config, l.client, currentAuth)
-	if err != nil {
+	if err := RefreshAuth(l.config, l.client, l.user); err != nil {
 		log.WithError(err).Info("unable to get new tokens")
-		return currentAuth
 	}
 
-	err = l.db.SetAuth(newAuth.Token, newAuth.Refresh)
-	if err != nil {
+	if err := l.db.UpsertUser(l.user); err != nil {
 		log.WithFields(log.Fields{
-			"new_token":   newAuth.Token,
-			"new_refresh": newAuth.Refresh,
+			"new_token":   l.user.Token,
+			"new_refresh": l.user.Refresh,
 		}).Info("unable to save these tokens")
+
+		return err
 	} else {
 		log.Info("saved new refresh token")
 	}
 
-	return newAuth
+	return nil
 }
 
 // see https://log.concept2.com/developers/documentation/#authentication-access-token-post
-func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord) (*AuthRecord, error) {
+func RefreshAuth(config *Configuration, client *Client, user *User) error {
 	if PM5_OAUTH_SECRET == "" {
 		panic("missing: PM5_OAUTH_SECRET")
 	}
@@ -92,27 +94,27 @@ func RefreshAuth(config *Configuration, client *Client, currentAuth *AuthRecord)
 	data.Set("client_secret", PM5_OAUTH_SECRET)
 	data.Set("grant_type", "refresh_token")
 	data.Set("scope", "results:write")
-	data.Set("refresh_token", currentAuth.Refresh)
+	data.Set("refresh_token", user.Refresh)
 
 	resp, err := client.PostForm(uri, data)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if val, ok := resp["access_token"]; !ok {
-		return nil, fmt.Errorf("didn't find access_token")
+		return fmt.Errorf("didn't find access_token")
 	} else if val == "" {
-		return nil, fmt.Errorf("cannot get access_token")
+		return fmt.Errorf("cannot get access_token")
 	}
 
 	if val, ok := resp["refresh_token"]; !ok {
-		return nil, fmt.Errorf("didn't find refresh_token")
+		return fmt.Errorf("didn't find refresh_token")
 	} else if val == "" {
-		return nil, fmt.Errorf("cannot get refresh_token")
+		return fmt.Errorf("cannot get refresh_token")
 	}
 
-	return &AuthRecord{
-		Token:   resp["access_token"].(string),
-		Refresh: resp["refresh_token"].(string),
-	}, nil
+	user.Token = resp["access_token"].(string)
+	user.Refresh = resp["refresh_token"].(string)
+
+	return nil
 }

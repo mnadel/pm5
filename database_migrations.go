@@ -11,8 +11,11 @@ type Migration func(dbm DBMigrator, rec *WorkoutDBRecord, wo *WorkoutData) (bool
 
 func NewDBMigrator(db *Database) *DBMigrator {
 	return &DBMigrator{
-		db:         db,
-		migrations: []Migration{DBMigrator.migration_20211025},
+		db: db,
+		migrations: []Migration{
+			DBMigrator.migration_20211025,
+			DBMigrator.migration_20211028,
+		},
 	}
 }
 
@@ -84,4 +87,10 @@ func (dbm DBMigrator) migration_20211025(rec *WorkoutDBRecord, wo *WorkoutData) 
 	}
 
 	return false, nil
+}
+
+// migration_20211028 adds a UserID field
+func (dbm DBMigrator) migration_20211028(rec *WorkoutDBRecord, wo *WorkoutData) (bool, error) {
+	rec.UserUUID = PM5_USER_UUID
+	return true, nil
 }
