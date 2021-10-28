@@ -44,8 +44,12 @@ First, generate a link to authenticate PM5 Book:
 After navigating to the link shown and authorizing this application, you'll be shown a command to run. It'll look something like this:
 
 ```
-> pm5 --auth xxxyyy:abc123
+> pm5 --auth <uuid>:<auth>:<refresh>
 ```
+
+- `<uuid>` should be replaced with the user's UUID (probably their NFC token id) when you execute the command
+- `<auth>` will be the literal OAuth access token
+- `<refresh>` will be the literal OAuth refresh token
 
 And with that, PM5 Book will have everything it needs to update Logbook on your behalf!
 
