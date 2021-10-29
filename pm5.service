@@ -8,7 +8,7 @@ User=root
 Group=root
 Type=simple
 Environment="PM5_OAUTH_SECRET=abc123xyz"
-ExecStart=/home/pi/go/bin/pm5 --logfile /var/log/pm5.log --db /var/spool/pm5/pm5.boltdb
+ExecStart=/home/pi/go/bin/pm5 --db /var/spool/pm5/pm5.boltdb --logfile /var/log/pm5.log
 ExecStop=/usr/bin/sleep 5
 Restart=always
 RestartSec=5
