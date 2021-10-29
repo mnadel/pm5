@@ -89,7 +89,7 @@ func (dbm DBMigrator) migration_20211025(rec *WorkoutDBRecord, wo *WorkoutData) 
 	return false, nil
 }
 
-// migration_20211028 adds a UserID field
+// migration_20211028 adds a UserUUID field
 func (dbm DBMigrator) migration_20211028(rec *WorkoutDBRecord, wo *WorkoutData) (bool, error) {
 	if rec.UserUUID == "" {
 		rec.UserUUID = PM5_USER_UUID

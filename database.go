@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"time"
 
@@ -12,20 +10,6 @@ import (
 
 type Database struct {
 	db *bolt.DB
-}
-
-type WorkoutDBRecord struct {
-	ID        uint64
-	Data      []byte
-	SentAt    time.Time
-	CreatedAt time.Time
-	UserUUID  string
-}
-
-type User struct {
-	UUID    string
-	Token   string
-	Refresh string
 }
 
 func NewDatabase(c *Configuration) *Database {
@@ -53,8 +37,8 @@ func (d *Database) Stats() bolt.Stats {
 }
 
 func (d *Database) UpsertUser(user *User) error {
-	if user.UUID == "" {
-		return fmt.Errorf("user is missing uuid")
+	if err := user.Validate(); err != nil {
+		return err
 	}
 
 	return d.db.Update(func(tx *bolt.Tx) error {
@@ -63,7 +47,7 @@ func (d *Database) UpsertUser(user *User) error {
 			return err
 		}
 
-		encoded, err := EncodeUserRecord(user)
+		encoded, err := user.AsGob()
 		if err != nil {
 			return err
 		}
@@ -83,8 +67,8 @@ func (d *Database) GetUsers() ([]*User, error) {
 
 		c := b.Cursor()
 
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if user, err := DecodeUserRecord(b.Get(k)); err != nil {
+		for k, v := c.First(); k != nil; k, _ = c.Next() {
+			if user, err := (&User{}).FromGob(v); err != nil {
 				return err
 			} else {
 				users = append(users, user)
@@ -124,14 +108,14 @@ func (d *Database) MarkSent(id uint64) error {
 			return fmt.Errorf("record not found: %d", id)
 		}
 
-		wo, err := DecodeWorkoutRecord(v)
+		wo, err := (&WorkoutDBRecord{}).FromGob(v)
 		if err != nil {
 			return err
 		}
 
 		wo.SentAt = time.Now()
 
-		encoded, err := EncodeWorkoutRecord(wo)
+		encoded, err := wo.AsGob()
 		if err != nil {
 			return err
 		}
@@ -149,7 +133,7 @@ func (d *Database) GetWorkout(id uint64) (*WorkoutDBRecord, error) {
 			return nil
 		}
 
-		if r, err := DecodeWorkoutRecord(b.Get(Itob(id))); err != nil {
+		if r, err := (&WorkoutDBRecord{}).FromGob(b.Get(Itob(id))); err != nil {
 			return err
 		} else {
 			rec = r
@@ -172,7 +156,7 @@ func (d *Database) UpdateWorkout(w *WorkoutDBRecord) error {
 			return fmt.Errorf("record missing id")
 		}
 
-		encoded, err := EncodeWorkoutRecord(w)
+		encoded, err := w.AsGob()
 		if err != nil {
 			return err
 		}
@@ -193,7 +177,7 @@ func (d *Database) CreateWorkout(w *WorkoutDBRecord) error {
 		w.ID = id
 		w.CreatedAt = time.Now()
 
-		encoded, err := EncodeWorkoutRecord(w)
+		encoded, err := w.AsGob()
 		if err != nil {
 			return err
 		}
@@ -233,7 +217,7 @@ func (d *Database) GetPendingWorkouts() ([]*WorkoutDBRecord, error) {
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			wo, err := DecodeWorkoutRecord(v)
+			wo, err := (&WorkoutDBRecord{}).FromGob(v)
 			if err != nil {
 				return err
 			}
@@ -260,7 +244,7 @@ func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			wo, err := DecodeWorkoutRecord(v)
+			wo, err := (&WorkoutDBRecord{}).FromGob(v)
 			if err != nil {
 				return err
 			}
@@ -321,52 +305,4 @@ func (d *Database) PrintDB() error {
 	}
 
 	return nil
-}
-
-func (wr *WorkoutDBRecord) Decode() *RawWorkoutData {
-	return ReadWorkoutData(wr.Data)
-}
-
-func EncodeWorkoutRecord(r *WorkoutDBRecord) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(r); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-func DecodeWorkoutRecord(data []byte) (*WorkoutDBRecord, error) {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-
-	var wr WorkoutDBRecord
-	if err := dec.Decode(&wr); err != nil {
-		return nil, err
-	}
-
-	return &wr, nil
-}
-
-func EncodeUserRecord(user *User) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(user); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-func DecodeUserRecord(data []byte) (*User, error) {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-
-	var user User
-	if err := dec.Decode(&user); err != nil {
-		return nil, err
-	}
-
-	return &user, nil
 }

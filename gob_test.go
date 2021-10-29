@@ -49,10 +49,10 @@ func TestGobEncodingUsers(t *testing.T) {
 		Refresh: "c",
 	}
 
-	encoded, err := EncodeUserRecord(user)
+	encoded, err := user.AsGob()
 	assert.NoError(t, err)
 
-	decoded, err := DecodeUserRecord(encoded)
+	decoded, err := (&User{}).FromGob(encoded)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "a", decoded.UUID)
