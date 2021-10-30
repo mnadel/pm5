@@ -4,15 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type Logbook struct {
 	db     *Database
 	client *Client
 	config *Configuration
-	user   *User
 }
 
 func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
@@ -24,20 +21,9 @@ func NewLogbook(config *Configuration, db *Database, client *Client) *Logbook {
 }
 
 // see: https://log.concept2.com/developers/documentation/#authentication-access-token-post
-func (l *Logbook) PostWorkout(wo *WorkoutData) error {
-	if l.user == nil {
-		if user, err := l.db.GetUser(PM5_USER_UUID); err != nil {
-			return err
-		} else {
-			l.user = user
-			if err := l.tryGetNewRefreshToken(); err != nil {
-				return err
-			}
-		}
-	}
-
+func (l *Logbook) PostWorkout(user *User, wo *WorkoutData) error {
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", l.user.Token),
+		"Authorization": fmt.Sprintf("Bearer %s", user.Token),
 		"Content-Type":  "application/json",
 	}
 
@@ -58,27 +44,6 @@ func (l *Logbook) PostWorkout(wo *WorkoutData) error {
 	uri := fmt.Sprintf("https://%s/api/users/me/results", l.config.LogbookHost)
 
 	return l.client.Post(uri, string(payload), headers)
-}
-
-func (l *Logbook) tryGetNewRefreshToken() error {
-	log.Info("attempting to get new refresh token")
-
-	if err := RefreshAuth(l.config, l.client, l.user); err != nil {
-		log.WithError(err).Info("unable to get new tokens")
-	}
-
-	if err := l.db.UpsertUser(l.user); err != nil {
-		log.WithFields(log.Fields{
-			"new_token":   l.user.Token,
-			"new_refresh": l.user.Refresh,
-		}).Info("unable to save these tokens")
-
-		return err
-	} else {
-		log.Info("saved new refresh token")
-	}
-
-	return nil
 }
 
 // see https://log.concept2.com/developers/documentation/#authentication-access-token-post

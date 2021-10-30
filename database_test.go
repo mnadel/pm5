@@ -12,7 +12,7 @@ func TestDatabaseWriteRecord(t *testing.T) {
 	c := MustInt(db.Count())
 	assert.Equal(t, 0, c)
 
-	db.CreateWorkout(&WorkoutDBRecord{
+	db.CreateWorkout(&Workout{
 		Data: []byte{0xc, 0xa, 0xf, 0xe, 0xb, 0xa, 0xb, 0xe},
 	})
 
@@ -25,7 +25,7 @@ func TestDatabaseGetWorkout(t *testing.T) {
 	c := MustInt(db.Count())
 	assert.Equal(t, 0, c)
 
-	wo := &WorkoutDBRecord{
+	wo := &Workout{
 		Data: []byte{0xc, 0xa, 0xf, 0xe, 0xb, 0xa, 0xb, 0xe},
 	}
 
@@ -47,7 +47,7 @@ func TestDatabaseGetPendingRecords(t *testing.T) {
 	assert.Equal(t, 0, c)
 
 	for i := 0; i < 5; i++ {
-		db.CreateWorkout(&WorkoutDBRecord{
+		db.CreateWorkout(&Workout{
 			Data: []byte{byte(i)},
 		})
 	}
@@ -72,7 +72,7 @@ func TestDatabaseMarkSent(t *testing.T) {
 	assert.Equal(t, 0, c)
 
 	for i := 0; i < 5; i++ {
-		wo := &WorkoutDBRecord{
+		wo := &Workout{
 			Data: []byte{byte(i)},
 		}
 		db.CreateWorkout(wo)

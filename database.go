@@ -21,7 +21,7 @@ func NewDatabase(c *Configuration) *Database {
 	}
 
 	d := &Database{db}
-	if err := d.initDB(); err != nil {
+	if err := d.init(); err != nil {
 		panic(err)
 	}
 
@@ -108,7 +108,7 @@ func (d *Database) MarkSent(id uint64) error {
 			return fmt.Errorf("record not found: %d", id)
 		}
 
-		wo, err := (&WorkoutDBRecord{}).FromGob(v)
+		wo, err := (&Workout{}).FromGob(v)
 		if err != nil {
 			return err
 		}
@@ -124,8 +124,8 @@ func (d *Database) MarkSent(id uint64) error {
 	})
 }
 
-func (d *Database) GetWorkout(id uint64) (*WorkoutDBRecord, error) {
-	var rec *WorkoutDBRecord
+func (d *Database) GetWorkout(id uint64) (*Workout, error) {
+	var rec *Workout
 
 	err := d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("workouts"))
@@ -133,7 +133,7 @@ func (d *Database) GetWorkout(id uint64) (*WorkoutDBRecord, error) {
 			return nil
 		}
 
-		if r, err := (&WorkoutDBRecord{}).FromGob(b.Get(Itob(id))); err != nil {
+		if r, err := (&Workout{}).FromGob(b.Get(Itob(id))); err != nil {
 			return err
 		} else {
 			rec = r
@@ -145,7 +145,7 @@ func (d *Database) GetWorkout(id uint64) (*WorkoutDBRecord, error) {
 	return rec, err
 }
 
-func (d *Database) UpdateWorkout(w *WorkoutDBRecord) error {
+func (d *Database) UpdateWorkout(w *Workout) error {
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("workouts"))
 		if err != nil {
@@ -165,7 +165,7 @@ func (d *Database) UpdateWorkout(w *WorkoutDBRecord) error {
 	})
 }
 
-func (d *Database) CreateWorkout(w *WorkoutDBRecord) error {
+func (d *Database) CreateWorkout(w *Workout) error {
 	return d.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("workouts"))
 		if err != nil {
@@ -206,8 +206,8 @@ func (d *Database) Count() (int, error) {
 	return count, err
 }
 
-func (d *Database) GetPendingWorkouts() ([]*WorkoutDBRecord, error) {
-	data := make([]*WorkoutDBRecord, 0)
+func (d *Database) GetPendingWorkouts() ([]*Workout, error) {
+	data := make([]*Workout, 0)
 
 	err := d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("workouts"))
@@ -217,7 +217,7 @@ func (d *Database) GetPendingWorkouts() ([]*WorkoutDBRecord, error) {
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			wo, err := (&WorkoutDBRecord{}).FromGob(v)
+			wo, err := (&Workout{}).FromGob(v)
 			if err != nil {
 				return err
 			}
@@ -233,8 +233,8 @@ func (d *Database) GetPendingWorkouts() ([]*WorkoutDBRecord, error) {
 	return data, err
 }
 
-func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
-	data := make([]*WorkoutDBRecord, 0)
+func (d *Database) GetWorkouts() ([]*Workout, error) {
+	data := make([]*Workout, 0)
 
 	err := d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("workouts"))
@@ -244,7 +244,7 @@ func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			wo, err := (&WorkoutDBRecord{}).FromGob(v)
+			wo, err := (&Workout{}).FromGob(v)
 			if err != nil {
 				return err
 			}
@@ -258,7 +258,7 @@ func (d *Database) GetWorkouts() ([]*WorkoutDBRecord, error) {
 	return data, err
 }
 
-func (d *Database) initDB() error {
+func (d *Database) init() error {
 	return d.db.Update(func(tx *bolt.Tx) error {
 		if _, err := tx.CreateBucketIfNotExists([]byte("workouts")); err != nil {
 			return err

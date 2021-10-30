@@ -11,7 +11,7 @@ var (
 		Help: "The number of times we've scanned for a BLE device",
 	})
 
-	MetricLastScan = promauto.NewGauge(prometheus.GaugeOpts{
+	MetricLastBLEScan = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "pm5_ble_scan_last",
 		Help: "The time we last scanned for a BLE device",
 	})

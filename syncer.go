@@ -7,17 +7,18 @@ import (
 )
 
 type Syncer struct {
-	db       *Database
-	logbook  *Logbook
-	cancelCh chan struct{}
-	lastLog  time.Time
+	db         *Database
+	logbook    *Logbook
+	cancelCh   chan struct{}
+	logLimiter *RateLimiter
 }
 
 func NewSyncer(logbook *Logbook, db *Database) *Syncer {
 	return &Syncer{
-		logbook:  logbook,
-		db:       db,
-		cancelCh: make(chan struct{}, 1),
+		logbook:    logbook,
+		db:         db,
+		cancelCh:   make(chan struct{}, 1),
+		logLimiter: NewRateLimiter(time.Minute * 5),
 	}
 }
 
@@ -30,21 +31,33 @@ func (s *Syncer) Sync() {
 	if err != nil {
 		log.WithError(err).Error("cannot get workouts to sync")
 		return
-	} else if time.Since(s.lastLog) >= time.Minute*5 {
-		log.WithField("count", len(pendings)).Info("found records to sync")
-		s.lastLog = time.Now()
 	}
+
+	s.logLimiter.MaybePerform(func() {
+		log.WithField("count", len(pendings)).Info("found records to sync")
+	})
 
 	for _, pending := range pendings {
 		raw := ReadWorkoutData(pending.Data)
 		parsed := raw.Decode()
 
+		user, err := s.db.GetUser(pending.UserUUID)
+		if err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"user": pending.UserUUID,
+				"id":   pending.ID,
+			}).Error("cannot find user")
+
+			continue
+		}
+
 		log.WithFields(log.Fields{
-			"id": pending.ID,
-			"dt": parsed.LogEntry.Format(ISO8601),
+			"user": user.UUID,
+			"id":   pending.ID,
+			"dt":   parsed.LogEntry.Format(ISO8601),
 		}).Info("syncing record")
 
-		err := s.logbook.PostWorkout(parsed)
+		err = s.logbook.PostWorkout(user, parsed)
 		if err == nil || err.Error() == "409 Conflict" { // if no error or already sent, mark sent
 			if err := s.db.MarkSent(pending.ID); err != nil {
 				log.WithError(err).WithField("id", pending.ID).Error("error marking workout sent")

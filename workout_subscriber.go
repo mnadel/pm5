@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -38,16 +36,15 @@ func (ws *WorkoutSubscriber) Notify(data []byte) {
 	watchdog := NewWatchdog(ws.config)
 	watchdog.StartWorkoutDisconnectMonitor()
 
+	userUUID := CurrentUser.GetUUID()
+
 	log.WithFields(log.Fields{
+		"user":    userUUID,
 		"data":    data,
 		"message": "workout",
 	}).Info("received message")
 
-	if err := ws.database.CreateWorkout(&WorkoutDBRecord{Data: data}); err != nil {
+	if err := ws.database.CreateWorkout(&Workout{UserUUID: userUUID, Data: data}); err != nil {
 		log.WithError(err).Error("error saving workout in db")
 	}
-
-	parsed := ReadWorkoutData(data)
-	decoded := parsed.Decode()
-	fmt.Println(decoded.AsJSON())
 }

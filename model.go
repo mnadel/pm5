@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type WorkoutDBRecord struct {
+type Workout struct {
 	ID        uint64
 	Data      []byte
 	SentAt    time.Time
@@ -21,11 +21,11 @@ type User struct {
 	Refresh string
 }
 
-func (wr *WorkoutDBRecord) Decode() *RawWorkoutData {
+func (wr *Workout) Decode() *RawWorkoutData {
 	return ReadWorkoutData(wr.Data)
 }
 
-func (wr *WorkoutDBRecord) AsGob() ([]byte, error) {
+func (wr *Workout) AsGob() ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(wr); err != nil {
@@ -35,11 +35,11 @@ func (wr *WorkoutDBRecord) AsGob() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (wr *WorkoutDBRecord) FromGob(data []byte) (*WorkoutDBRecord, error) {
+func (wr *Workout) FromGob(data []byte) (*Workout, error) {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 
-	var rec WorkoutDBRecord
+	var rec Workout
 	if err := dec.Decode(&rec); err != nil {
 		return nil, err
 	}

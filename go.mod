@@ -11,10 +11,12 @@ require (
 	github.com/stretchr/testify v1.7.0
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	tinygo.org/x/bluetooth v0.3.0
 )
 
 require (
+	github.com/BurntSushi/toml v0.4.1 // indirect
 	github.com/JuulLabs-OSS/cbgo v0.0.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
@@ -30,6 +32,5 @@ require (
 	github.com/prometheus/procfs v0.6.0 // indirect
 	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

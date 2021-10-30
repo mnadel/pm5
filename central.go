@@ -81,7 +81,7 @@ func (c *Central) Listen() {
 	// this call to Scan won't return until we call adapter.StopScan()
 	err := c.adapter.Scan(func(adapter *bluetooth.Adapter, result bluetooth.ScanResult) {
 		MetricBLEScans.Add(1)
-		MetricLastScan.SetToCurrentTime()
+		MetricLastBLEScan.SetToCurrentTime()
 
 		if c.device.IsPM5(result) {
 			log.WithFields(log.Fields{

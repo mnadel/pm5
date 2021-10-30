@@ -7,7 +7,7 @@ type DBMigrator struct {
 	migrations []Migration
 }
 
-type Migration func(dbm DBMigrator, rec *WorkoutDBRecord, wo *WorkoutData) (bool, error)
+type Migration func(dbm DBMigrator, rec *Workout, wo *WorkoutData) (bool, error)
 
 func NewDBMigrator(db *Database) *DBMigrator {
 	return &DBMigrator{
@@ -43,7 +43,7 @@ func (dbm *DBMigrator) Migrate() error {
 	return nil
 }
 
-func (dbm *DBMigrator) MigrateRecord(rec *WorkoutDBRecord) (bool, error) {
+func (dbm *DBMigrator) MigrateRecord(rec *Workout) (bool, error) {
 	raw := rec.Decode()
 	decoded := raw.Decode()
 
@@ -74,7 +74,7 @@ func (dbm *DBMigrator) MigrateRecord(rec *WorkoutDBRecord) (bool, error) {
 }
 
 // migration_20211025 adds a CreatedAt field and sets it equal to the Workout's LogEntry date
-func (dbm DBMigrator) migration_20211025(rec *WorkoutDBRecord, wo *WorkoutData) (bool, error) {
+func (dbm DBMigrator) migration_20211025(rec *Workout, wo *WorkoutData) (bool, error) {
 	if rec.CreatedAt.IsZero() {
 		log.WithFields(log.Fields{
 			"id":         rec.ID,
@@ -90,7 +90,7 @@ func (dbm DBMigrator) migration_20211025(rec *WorkoutDBRecord, wo *WorkoutData) 
 }
 
 // migration_20211028 adds a UserUUID field
-func (dbm DBMigrator) migration_20211028(rec *WorkoutDBRecord, wo *WorkoutData) (bool, error) {
+func (dbm DBMigrator) migration_20211028(rec *Workout, wo *WorkoutData) (bool, error) {
 	if rec.UserUUID == "" {
 		rec.UserUUID = PM5_USER_UUID
 		return true, nil
