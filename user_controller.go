@@ -19,19 +19,19 @@ func NewUserController(config *Configuration, db *Database) *UserController {
 	}
 }
 
-func (uc *UserController) HandleLoginQuery(w http.ResponseWriter, r *http.Request) {
+func (uc *UserController) HandleGetUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	user := CurrentUser.Get()
 	if user == nil {
-		http.Error(w, "no current user", http.StatusNotFound)
+		http.Error(w, "no current user", http.StatusForbidden)
 		return
 	}
 
 	fmt.Fprintf(w, "%s\n", user.UUID)
 }
 
-func (uc *UserController) HandleLogin(w http.ResponseWriter, r *http.Request) {
+func (uc *UserController) HandleSetUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	CurrentUser.Reset()
@@ -46,7 +46,7 @@ func (uc *UserController) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user == nil {
-		http.Error(w, fmt.Sprintf("not found: %s", uuid), http.StatusUnauthorized)
+		http.Error(w, fmt.Sprintf("not found: %s", uuid), http.StatusForbidden)
 		return
 	}
 
