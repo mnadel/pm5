@@ -34,18 +34,18 @@ func (uc *UserController) HandleGetUser(w http.ResponseWriter, r *http.Request) 
 func (uc *UserController) HandleSetUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	CurrentUser.Reset()
-
 	vars := mux.Vars(r)
 	uuid := vars["uuid"]
 
 	user, err := uc.db.GetUser(uuid)
 	if err != nil {
+		CurrentUser.Reset()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if user == nil {
+		CurrentUser.Reset()
 		http.Error(w, fmt.Sprintf("not found: %s", uuid), http.StatusForbidden)
 		return
 	}

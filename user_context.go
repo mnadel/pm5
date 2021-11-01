@@ -15,13 +15,10 @@ func (um *UserContext) Reset() {
 }
 
 func (um *UserContext) Set(user *User) {
-	if um.current != nil && um.current.UUID == user.UUID {
-		// ignore duplicates
-		return
+	if um.current == nil || um.current.UUID != user.UUID {
+		um.current = user
+		log.WithField("uuid", user.UUID).Info("set current user")
 	}
-
-	um.current = user
-	log.WithField("uuid", user.UUID).Info("set current user")
 }
 
 func (um *UserContext) Get() *User {
