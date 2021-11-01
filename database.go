@@ -62,12 +62,12 @@ func (d *Database) GetUsers() ([]*User, error) {
 	err := d.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("users"))
 		if b == nil {
-			return fmt.Errorf("users bucket not found")
+			return fmt.Errorf("bucket not found: users")
 		}
 
 		c := b.Cursor()
 
-		for k, v := c.First(); k != nil; k, _ = c.Next() {
+		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if user, err := (&User{}).FromGob(v); err != nil {
 				return err
 			} else {

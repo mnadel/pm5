@@ -19,6 +19,7 @@ pi3:
 
 .PHONY: pi0
 pi0:
+	rm pm5
 	GOOS=linux GOARCH=arm GOARM=6 go build
 
 .PHONY: deploy

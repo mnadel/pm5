@@ -15,6 +15,11 @@ func (um *UserContext) Reset() {
 }
 
 func (um *UserContext) Set(user *User) {
+	if um.current != nil && um.current.UUID == user.UUID {
+		// ignore duplicates
+		return
+	}
+
 	um.current = user
 	log.WithField("uuid", user.UUID).Info("set current user")
 }
