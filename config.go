@@ -182,7 +182,7 @@ func refreshTokens(config *Configuration) {
 func saveAuth(auth string, config *Configuration) {
 	splitted := strings.Split(auth, ":")
 	if len(splitted) != 3 {
-		Panic(fmt.Errorf("parsed=%v", splitted), "cannot parse %v", auth)
+		Panic(fmt.Errorf("parsed=%v", splitted), "cannot parse", auth)
 	}
 
 	db := NewDatabase(config)
