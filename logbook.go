@@ -48,7 +48,7 @@ func (l *Logbook) PostWorkout(user *User, wo *WorkoutData) error {
 
 // see https://log.concept2.com/developers/documentation/#authentication-access-token-post
 func RefreshAuth(config *Configuration, client *Client, user *User) error {
-	if PM5_OAUTH_SECRET == "" {
+	if config.OAuthSecret == "" {
 		panic("missing: PM5_OAUTH_SECRET")
 	}
 
@@ -56,7 +56,7 @@ func RefreshAuth(config *Configuration, client *Client, user *User) error {
 
 	data := url.Values{}
 	data.Set("client_id", PM5_OAUTH_APPID)
-	data.Set("client_secret", PM5_OAUTH_SECRET)
+	data.Set("client_secret", config.OAuthSecret)
 	data.Set("grant_type", "refresh_token")
 	data.Set("scope", "results:write")
 	data.Set("refresh_token", user.Refresh)

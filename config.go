@@ -20,10 +20,6 @@ const (
 	PM5_USER_UUID      = "36cfe3f2-016a-43d5-af49-ed7140a43cf0"
 )
 
-var (
-	PM5_OAUTH_SECRET = os.Getenv("PM5_OAUTH_SECRET")
-)
-
 type Configuration struct {
 	// LogbookHost is the DNS host of the Logbook service
 	LogbookHost string
@@ -37,6 +33,8 @@ type Configuration struct {
 	BleWatchdogWorkoutDeadline time.Duration
 	// AdminConsolePort is the port to which we're attaching our web console
 	AdminConsolePort string
+	// OAuth app secret
+	OAuthSecret string
 }
 
 func NewTestConfiguration() *Configuration {
@@ -81,6 +79,7 @@ func NewConfiguration() *Configuration {
 		BleWatchdogWorkoutDisconnect: *bleWatchdogWorkoutDisconnect,
 		BleWatchdogWorkoutDeadline:   *bleWatchdogWorkoutDeadline,
 		AdminConsolePort:             *port,
+		OAuthSecret:                  os.Getenv("PM5_OAUTH_SECRET"),
 	}
 
 	configureLogger(*logLevel, *logFile)
