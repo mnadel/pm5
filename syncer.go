@@ -52,9 +52,10 @@ func (s *Syncer) Sync() {
 		}
 
 		log.WithFields(log.Fields{
-			"user": user.UUID,
-			"id":   pending.ID,
-			"dt":   parsed.LogEntry.Format(ISO8601),
+			"user":  user.UUID,
+			"token": user.Token,
+			"id":    pending.ID,
+			"dt":    parsed.LogEntry.Format(ISO8601),
 		}).Info("syncing record")
 
 		err = s.logbook.PostWorkout(user, parsed)
