@@ -2,13 +2,6 @@ USER := pi
 HOST := pm5
 DIR := /home/pi
 
-.PHONY: setup
-setup:
-	cp pm5.service /etc/systemd/system
-	systemctl daemon-reload
-	systemctl enable pm5
-	systemctl start pm5
-
 .PHONY: pi4
 pi4:
 	GOOS=linux GOARCH=arm GOARM=7 go build
@@ -27,3 +20,4 @@ deploy:
 	ssh $(USER)@$(HOST) "sudo systemctl stop pm5"
 	scp pm5 $(USER)@$(HOST):$(DIR)
 	ssh $(USER)@$(HOST) "sudo systemctl start pm5"
+
