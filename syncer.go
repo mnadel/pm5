@@ -74,7 +74,7 @@ func (s *Syncer) Sync() {
 			if s.logbook.config.SlackNotificationURL != "" {
 				s.alertLimiter.MaybePerform(func() {
 					body, err := json.Marshal(map[string]string{
-						"text": err.Error(),
+						"text": "PM5 alert: " + err.Error(),
 					})
 
 					if err != nil {
