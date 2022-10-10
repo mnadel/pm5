@@ -47,7 +47,7 @@ After navigating to the link shown and authorizing this application, you'll be s
 > pm5 --auth <uuid>:<auth>:<refresh>
 ```
 
-- `<uuid>` should be replaced with the user's UUID (probably their NFC token id) when you execute the command
+- `<uuid>` should be replaced with the user's UUID (probably their NFC token id) when you execute the command (or perhaps `default`)
 - `<auth>` will be the literal OAuth access token
 - `<refresh>` will be the literal OAuth refresh token
 
