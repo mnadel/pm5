@@ -1,24 +1,29 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type Syncer struct {
-	db         *Database
-	logbook    *Logbook
-	cancelCh   chan struct{}
-	logLimiter *RateLimiter
+	db           *Database
+	logbook      *Logbook
+	cancelCh     chan struct{}
+	logLimiter   *RateLimiter
+	alertLimiter *RateLimiter
 }
 
 func NewSyncer(logbook *Logbook, db *Database) *Syncer {
 	return &Syncer{
-		logbook:    logbook,
-		db:         db,
-		cancelCh:   make(chan struct{}, 1),
-		logLimiter: NewRateLimiter(time.Minute * 5),
+		logbook:      logbook,
+		db:           db,
+		cancelCh:     make(chan struct{}, 1),
+		logLimiter:   NewRateLimiter(time.Minute * 5),
+		alertLimiter: NewRateLimiter(time.Hour * 1),
 	}
 }
 
@@ -65,6 +70,25 @@ func (s *Syncer) Sync() {
 			}
 		} else {
 			log.WithError(err).WithField("id", pending.ID).Error("error posting workout")
+
+			if s.logbook.config.SlackNotificationURL != "" {
+				s.alertLimiter.MaybePerform(func() {
+					body, err := json.Marshal(map[string]string{
+						"text": err.Error(),
+					})
+
+					if err != nil {
+						log.WithError(err).WithField("id", pending.ID).Error("error encoding notification")
+						return
+					}
+
+					buf := bytes.NewBuffer(body)
+					_, err = http.Post(s.logbook.config.SlackNotificationURL, "application/json", buf)
+					if err != nil {
+						log.WithError(err).WithField("id", pending.ID).Error("error notifying")
+					}
+				})
+			}
 		}
 	}
 }

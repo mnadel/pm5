@@ -35,6 +35,8 @@ type Configuration struct {
 	AdminConsolePort string
 	// OAuth app secret
 	OAuthSecret string
+	// Slack notification URL
+	SlackNotificationURL string
 }
 
 func NewTestConfiguration() *Configuration {
@@ -60,6 +62,7 @@ func NewConfiguration() *Configuration {
 	logFile := flag.String("logfile", "-", "path to logfile, - for stdout")
 	logLevel := flag.String("loglevel", "info", "the logrus log level")
 	port := flag.String("port", ":2112", "web console port")
+	slack := flag.String("slack", "", "Slack notification URL")
 
 	bleWatchdogWorkoutDeadline := flag.Duration("deadline", time.Minute*35, "max duration after we connect to the PM5 before we expect to receive a workout summary")
 	bleWatchdogWorkoutDisconnect := flag.Duration("disconn", time.Minute*7, "max duration after workout sumary is received before we expect a disconnect")
@@ -80,6 +83,7 @@ func NewConfiguration() *Configuration {
 		BleWatchdogWorkoutDeadline:   *bleWatchdogWorkoutDeadline,
 		AdminConsolePort:             *port,
 		OAuthSecret:                  os.Getenv("PM5_OAUTH_SECRET"),
+		SlackNotificationURL:         *slack,
 	}
 
 	configureLogger(*logLevel, *logFile)
