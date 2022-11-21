@@ -52,7 +52,6 @@ func NewTestConfiguration() *Configuration {
 
 func NewConfiguration() *Configuration {
 	printDB := flag.Bool("dump", false, "print the contents of the database")
-	refresh := flag.Bool("refresh", false, "get a new refresh token")
 	authURL := flag.Bool("authurl", false, "print the auth url")
 	migrate := flag.Bool("migrate", false, "migrate db records")
 
@@ -96,9 +95,6 @@ func NewConfiguration() *Configuration {
 
 	if *printDB {
 		dumpDB(config)
-		os.Exit(0)
-	} else if *refresh {
-		refreshTokens(config)
 		os.Exit(0)
 	} else if *auth != "" {
 		saveAuth(*auth, config)
@@ -159,26 +155,6 @@ func dumpDB(config *Configuration) {
 	db := NewDatabase(config)
 	if err := db.PrintDB(); err != nil {
 		panic(err)
-	}
-}
-
-func refreshTokens(config *Configuration) {
-	db := NewDatabase(config)
-	users, err := db.GetUsers()
-	if err != nil {
-		Panic(err, "cannot get users")
-	}
-
-	for _, user := range users {
-		if err := RefreshAuth(config, NewClient(), user); err != nil {
-			Panic(err, "cannot refresh auth")
-		}
-
-		if err := db.UpsertUser(user); err != nil {
-			Panic(err, "cannot save user %v", user)
-		}
-
-		log.WithField("user", *user).Info("saved user")
 	}
 }
 

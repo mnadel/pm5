@@ -56,6 +56,18 @@ func (s *Syncer) Sync() {
 			continue
 		}
 
+		if err := s.logbook.RefreshAuth(user); err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"user": user,
+			}).Error("cannot refresh auth")
+
+			continue
+		} else if err = s.db.UpsertUser(user); err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"user": user,
+			}).Warn("cannot upsert auth")
+		}
+
 		log.WithFields(log.Fields{
 			"user":  user.UUID,
 			"token": user.Token,
