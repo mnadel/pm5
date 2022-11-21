@@ -56,6 +56,12 @@ func (s *Syncer) Sync() {
 			continue
 		}
 
+		log.WithFields(log.Fields{
+			"user":    pending.UserUUID,
+			"refresh": user.Refresh,
+			"token":   user.Token,
+		}).Info("refresh auth")
+
 		if err := s.logbook.RefreshAuth(user); err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"user": user,
@@ -66,6 +72,12 @@ func (s *Syncer) Sync() {
 			log.WithError(err).WithFields(log.Fields{
 				"user": user,
 			}).Warn("cannot upsert auth")
+		} else {
+			log.WithFields(log.Fields{
+				"user":    pending.UserUUID,
+				"refresh": user.Refresh,
+				"token":   user.Token,
+			}).Info("refreshed auth")
 		}
 
 		log.WithFields(log.Fields{
