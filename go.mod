@@ -12,7 +12,7 @@ require (
 	go.etcd.io/bbolt v1.3.7
 	golang.org/x/crypto v0.6.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	tinygo.org/x/bluetooth v0.6.0
+	tinygo.org/x/bluetooth v0.4.0
 )
 
 require (
@@ -30,7 +30,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1 // indirect
+    github.com/muka/go-bluetooth v0.0.0-20211122080231-b99792bbe62a // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/common v0.40.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
